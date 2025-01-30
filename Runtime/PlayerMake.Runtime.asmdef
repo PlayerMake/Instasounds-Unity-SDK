@@ -1,0 +1,16 @@
+{
+    "name": "PlayerMake.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "glTFast"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReference": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

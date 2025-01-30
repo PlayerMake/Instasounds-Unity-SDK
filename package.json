@@ -1,0 +1,23 @@
+{
+  "name": "com.instasounds.sdk",
+  "version": "0.0.1",
+  "displayName": "Instasounds SDK",
+  "description": "The official Instasounds SDK. Easy to setup, and built to power real time audio in games.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Instasounds",
+    "email": "info@instasounds.com",
+    "url": "https://instasounds.com"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
+  },
+  "samples": [],
+  "keywords": [
+    "instasounds",
+    "audio",
+    "sound manager",
+    "sounds",
+    "wav"
+  ]
+}
