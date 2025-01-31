@@ -43,24 +43,20 @@ public class RuntimeAudioEditor : Editor
         return string.Format("{0:00}:{1:00}:{2:00}", time.Minutes, time.Seconds, Math.Round((double)time.Milliseconds / 10f));
     }
 
-    Texture2D icon = null;
 
     public override void OnInspectorGUI()
     {
         var myTarget = (RuntimeAudio)target;
 
-        if (icon == null)
-        {
             // Load the custom icon from the Resources folder
-            icon = Resources.Load<Texture2D>("RuntimeSound");
+        var icon = Resources.Load<Texture2D>("RuntimeSound");
 
             // Assign the icon to the script asset
-            var script = MonoScript.FromMonoBehaviour((RuntimeAudio)target);
-            if (script != null && icon != null)
-            {
-                EditorGUIUtility.SetIconForObject(script, icon);
-                AssetDatabase.SaveAssets();
-            }
+        var script = MonoScript.FromMonoBehaviour((RuntimeAudio)target);
+        if (script != null && icon != null)
+        {
+            EditorGUIUtility.SetIconForObject(script, icon);
+            AssetDatabase.SaveAssets();
         }
 
         if (repaintCallback == null)
@@ -80,7 +76,7 @@ public class RuntimeAudioEditor : Editor
 
        // EditorGUI.BeginChangeCheck();
 
-        EditorGUILayout.LabelField("Selected Audio Clip", new GUIStyle(EditorStyles.label)
+        EditorGUILayout.LabelField("Audio Clip", new GUIStyle(EditorStyles.label)
         {
             fontStyle = FontStyle.Normal
         });
@@ -141,7 +137,6 @@ public class RuntimeAudioEditor : Editor
             }
         });
 
-        myTarget.id = EditorGUILayout.TextField("ID", myTarget?.selectedAsset?.Id);
         myTarget.playOnLoad = EditorGUILayout.Toggle("Play on Load", myTarget.playOnLoad);
         myTarget.audioSource = (AudioSource)EditorGUILayout.ObjectField("Audio Source", myTarget.audioSource, typeof(AudioSource), true);
         EditorGUILayout.LabelField("Note that the AudioClip property of the Audio Source component set above will be overriden by this component.", new GUIStyle(EditorStyles.miniLabel)

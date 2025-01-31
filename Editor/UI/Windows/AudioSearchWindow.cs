@@ -40,6 +40,12 @@ public class AudioSearchWindow : EditorWindow
 
     private void OnDestroy()
     {
+        foreach (var clip in foundClips)
+        {
+            if (clip?.SceneData?.audioSource != null)
+                DestroyImmediate(clip.SceneData.audioSource);
+        }
+
         EditorApplication.update -= repaintCallback;
     }
 
@@ -104,15 +110,28 @@ public class AudioSearchWindow : EditorWindow
         }
 
 
+        EditorGUILayout.BeginVertical(new GUIStyle()
+        {
+            margin = new RectOffset(10, 10, 6, 0)
+        });
+
         // Search bar
         EditorGUILayout.LabelField("Search Audio Clips:");
 
         searchQuery = EditorGUILayout.TextField("Name", searchQuery);
 
+        EditorGUILayout.BeginVertical(new GUIStyle()
+        {
+            margin = new RectOffset(0, 0, 10, 0)
+        });
+
+        EditorGUILayout.EndVertical();
+
         foreach (var clip in foundClips)
         {
             RenderAudioClip(clip.Asset, clip.SceneData);
         }
+        EditorGUILayout.EndVertical();
     }
 
     private void RenderAudioClip(Asset asset, TempAudioData clipData)
@@ -122,8 +141,6 @@ public class AudioSearchWindow : EditorWindow
             margin = new RectOffset(0, 0, 0, 10)
         });
         EditorGUILayout.BeginHorizontal();
-
-        // Display the audio clip name
 
         EditorGUILayout.BeginVertical();
 

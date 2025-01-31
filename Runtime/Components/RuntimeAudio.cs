@@ -8,8 +8,6 @@ public class RuntimeAudio : MonoBehaviour
 {
     public AudioSource audioSource;
 
-    public string id;
-
     public Asset selectedAsset;
 
     public bool playOnLoad;
