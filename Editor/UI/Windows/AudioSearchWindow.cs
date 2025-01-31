@@ -8,9 +8,10 @@ using UnityEngine;
 public class AudioSearchWindow : EditorWindow
 {
     private static InstasoundsAudioSource targetComponent;
+    private static InstasoundsComponentEditor _editorComponent;
     private string searchQuery = "";
 
-    class LocalAsset : Asset
+    class TempAudioData
     {
         public bool Playing;
 
@@ -19,6 +20,8 @@ public class AudioSearchWindow : EditorWindow
         public AudioSource audioSource;
 
         public float CurrentTime;
+
+        public Asset Asset;
     }
 
     private GameObject previewGameObject;
@@ -26,8 +29,13 @@ public class AudioSearchWindow : EditorWindow
     {
         if (!previewGameObject)
         {
-            previewGameObject = EditorUtility.CreateGameObjectWithHideFlags("PreviewAudio", HideFlags.HideAndDontSave, typeof(GameObject)); ;
+            previewGameObject = EditorUtility.CreateGameObjectWithHideFlags("PreviewAudio", HideFlags.HideAndDontSave);
         }
+    }
+
+    private void OnDestroy()
+    {
+        EditorApplication.update -= repaintCallback;
     }
 
     private EditorApplication.CallbackFunction updateCallback;
@@ -35,32 +43,38 @@ public class AudioSearchWindow : EditorWindow
 
     private double nextRepaintTime = 0;
 
-    private List<LocalAsset> foundClips = new List<LocalAsset>()
+    private List<TempAudioData> foundClips = new List<TempAudioData>()
     {
-        new LocalAsset()
+        new TempAudioData()
         {
+            Asset = new Asset()
+            {
             Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
             Name = "Monkey",
             Id = "Test",
-            Playing = false,
+            },
         },
-        new LocalAsset()
+        new TempAudioData()
         {
+            Asset = new Asset()
+            {
+            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
+            Name = "Monkey 1",
+            Id = "Test1",
+            },
+        },
+         new TempAudioData()
+        {
+            Asset = new Asset()
+            {
             Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
             Name = "Monkey 2",
-            Id = "Test1",
-            Playing = false,
-        },
-        new LocalAsset()
-        {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey 3",
             Id = "Test2",
-            Playing = false,
+            },
         },
     };
 
-    public static void Open(InstasoundsAudioSource component)
+    public static void Open(InstasoundsComponentEditor editorComponent, InstasoundsAudioSource component)
     {
         // Create and show window
         var window = GetWindow<AudioSearchWindow>("Choose an Audio Clip");
@@ -68,6 +82,7 @@ public class AudioSearchWindow : EditorWindow
 
         // Pass the target component
         targetComponent = component;
+        _editorComponent = editorComponent;
     }
     public static string FormatTime(float totalSeconds)
     {
@@ -84,8 +99,7 @@ public class AudioSearchWindow : EditorWindow
             {
                 if (EditorApplication.timeSinceStartup > nextRepaintTime)
                 {
-                    nextRepaintTime = EditorApplication.timeSinceStartup + 0.05
-                    ;
+                    nextRepaintTime = EditorApplication.timeSinceStartup + 0.05;
                     Repaint();
                 }
             };
@@ -105,7 +119,7 @@ public class AudioSearchWindow : EditorWindow
         }
     }
 
-    private void RenderAudioClip(LocalAsset clip)
+    private void RenderAudioClip(TempAudioData clip)
     {
         EditorGUILayout.BeginVertical(new GUIStyle()
         {
@@ -132,7 +146,7 @@ public class AudioSearchWindow : EditorWindow
         }
 
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(clip.Name, GUILayout.Width(70));
+        EditorGUILayout.LabelField(clip.Asset.Name, GUILayout.Width(70));
         EditorGUILayout.Space();
         EditorGUILayout.LabelField(FormatTime(clip.CurrentTime), GUILayout.Width(60));
         EditorGUILayout.EndHorizontal();
@@ -159,7 +173,7 @@ public class AudioSearchWindow : EditorWindow
                 clip.Playing = true;
 
                 InstasoundsSdk
-                    .LoadAudioClipAsync(clip.Url)
+                    .LoadAudioClipAsync(clip.Asset.Url)
                     .ContinueWith(p =>
                     {
                         updateCallback = () => PlayClipOnMainThread(p.Result, clip);
@@ -170,24 +184,27 @@ public class AudioSearchWindow : EditorWindow
 
         }
 
-        /* if (GUILayout.Button(targetComponent.selectedClip?.Id == clip.Id ? "Unselect" : "Select", GUILayout.Width(60), GUILayout.Height(34)))
+        if (GUILayout.Button("Select", GUILayout.Width(60), GUILayout.Height(34)))
         {
-            if (targetComponent.selectedClip?.Id == clip.Id)
+            targetComponent.selectedAsset = clip.Asset;
+
+            _editorComponent.selectedClip = new InstasoundsComponentEditor.TempAudioData()
             {
-                targetComponent.selectedClip = null;
-            }
-            else
-            {
-                targetComponent.selectedClip = clip;
-            }
-        } */
+                Asset = clip.Asset,
+            };
+
+            EditorUtility.SetDirty(targetComponent);
+            EditorUtility.SetDirty(_editorComponent);
+            // Close the window after selection
+            // Close();
+        }
         //GUI.enabled = true;
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.EndVertical();
     }
 
-    private Action ListenForClipFinish(double stopTime, LocalAsset asset)
+    private Action ListenForClipFinish(double stopTime, TempAudioData asset)
     {
         if (EditorApplication.timeSinceStartup >= stopTime)
         {
@@ -200,7 +217,7 @@ public class AudioSearchWindow : EditorWindow
         return () => { };
     }
 
-    private Action PlayClipOnMainThread(AudioClip clip, LocalAsset asset)
+    private Action PlayClipOnMainThread(AudioClip clip, TempAudioData asset)
     {
         // This is a closure to ensure the flag is handled for one-time execution.
         bool played = false;
@@ -228,7 +245,7 @@ public class AudioSearchWindow : EditorWindow
     }
 
 
-    private void PlayClip(AudioClip clip, LocalAsset asset)
+    private void PlayClip(AudioClip clip, TempAudioData asset)
     {
         if (asset.audioSource == null)
         {

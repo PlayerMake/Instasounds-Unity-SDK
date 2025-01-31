@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using Instasounds.V1;
 using System;
 using Instasounds.Api;
-using System.Linq;
 
 [CustomEditor(typeof(InstasoundsAudioSource))] // Links this editor to CustomComponent
 public class InstasoundsComponentEditor : Editor
 {
-    class LocalAsset : Asset
+    public class TempAudioData
     {
         public bool Playing;
 
@@ -18,34 +17,43 @@ public class InstasoundsComponentEditor : Editor
         public AudioSource audioSource;
 
         public float CurrentTime;
+
+        public Asset Asset;
     }
 
     private string searchText = "";
     private bool searchOpen = true;
-    private LocalAsset selectedClip = null;
 
-    private List<LocalAsset> foundClips = new List<LocalAsset>()
-    {
-        new LocalAsset()
+    public TempAudioData selectedClip;
+
+    private List<TempAudioData> foundClips = new List<TempAudioData>()
+    { 
+        new TempAudioData()
         {
+            Asset = new Asset()
+            {
             Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
             Name = "Monkey",
             Id = "Test",
-            Playing = false,
+            },
         },
-        new LocalAsset()
+        new TempAudioData()
         {
+            Asset = new Asset()
+            {
+            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
+            Name = "Monkey 1",
+            Id = "Test1",
+            },
+        },
+         new TempAudioData()
+        {
+            Asset = new Asset()
+            {
             Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
             Name = "Monkey 2",
-            Id = "Test1",
-            Playing = false,
-        },
-        new LocalAsset()
-        {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey 3",
             Id = "Test2",
-            Playing = false,
+            },
         },
     };
 
@@ -56,7 +64,7 @@ public class InstasoundsComponentEditor : Editor
     {
         if (!previewGameObject)
         {
-            previewGameObject = EditorUtility.CreateGameObjectWithHideFlags("PreviewAudio", HideFlags.HideAndDontSave, typeof(GameObject)); ;
+            previewGameObject = EditorUtility.CreateGameObjectWithHideFlags("PreviewAudio", HideFlags.HideAndDontSave);
         }
     }
 
@@ -74,7 +82,7 @@ public class InstasoundsComponentEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        InstasoundsAudioSource myTarget = (InstasoundsAudioSource)target;
+        var myTarget = (InstasoundsAudioSource)target;
 
         if (repaintCallback == null)
         {
@@ -82,8 +90,8 @@ public class InstasoundsComponentEditor : Editor
             {
                 if (EditorApplication.timeSinceStartup > nextRepaintTime)
                 {
-                    nextRepaintTime = EditorApplication.timeSinceStartup + 0.05
-                    ;
+                    nextRepaintTime = EditorApplication.timeSinceStartup + 0.05;
+
                     Repaint();
                 }
             };
@@ -96,8 +104,16 @@ public class InstasoundsComponentEditor : Editor
             fontStyle = FontStyle.Normal
         });
 
-        if (selectedClip != null)
+        if (myTarget.selectedAsset != null)
+        {
+            if (selectedClip == null)
+                selectedClip = new TempAudioData()
+                {
+                    Asset = myTarget.selectedAsset,
+                };
+
             RenderAudioClip(selectedClip);
+        }
         else
         {
             EditorGUILayout.BeginVertical(new GUIStyle()
@@ -130,11 +146,12 @@ public class InstasoundsComponentEditor : Editor
             if (GUILayout.Button("▶ Play", GUILayout.Width(60), GUILayout.Height(34)))
             {
             }
-
-            if (GUILayout.Button("Change", GUILayout.Width(60), GUILayout.Height(34)))
-            {
-            }
             GUI.enabled = true;
+
+            if (GUILayout.Button("Set", GUILayout.Width(60), GUILayout.Height(34)))
+            {
+                AudioSearchWindow.Open(this, myTarget);
+            }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
@@ -195,7 +212,7 @@ public class InstasoundsComponentEditor : Editor
         }
     }
 
-    private void RenderAudioClip (LocalAsset clip)
+    private void RenderAudioClip (TempAudioData clip)
     {
         EditorGUILayout.BeginVertical(new GUIStyle()
         {
@@ -222,7 +239,7 @@ public class InstasoundsComponentEditor : Editor
         }
 
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(clip.Name, GUILayout.Width(70));
+        EditorGUILayout.LabelField(clip.Asset.Name, GUILayout.Width(70));
         EditorGUILayout.Space();
         EditorGUILayout.LabelField(FormatTime(clip.CurrentTime), GUILayout.Width(60));
         EditorGUILayout.EndHorizontal();
@@ -249,7 +266,7 @@ public class InstasoundsComponentEditor : Editor
                 clip.Playing = true;
 
                 InstasoundsSdk
-                    .LoadAudioClipAsync(clip.Url)
+                    .LoadAudioClipAsync(clip.Asset.Url)
                     .ContinueWith(p =>
                     {
                         updateCallback = () => PlayClipOnMainThread(p.Result, clip);
@@ -260,16 +277,23 @@ public class InstasoundsComponentEditor : Editor
 
         }
 
-        if (GUILayout.Button(selectedClip?.Id == clip.Id ? "Unselect" : "Select", GUILayout.Width(60), GUILayout.Height(34)))
+        if (GUILayout.Button("Change", GUILayout.Width(60), GUILayout.Height(34)))
         {
-            if (selectedClip?.Id == clip.Id)
+            var myTarget = (InstasoundsAudioSource)target;
+
+            /* if (selectedClip != null)
             {
+                selectedClip.Playing = false;
+                selectedClip.audioSource?.Stop();
+                selectedClip.CurrentTime = 0;
+                if (selectedClip.audioSource != null)
+                    DestroyImmediate(selectedClip.audioSource);
+                selectedClip.audioSource = null;
                 selectedClip = null;
-            }
-            else
-            {
-                selectedClip = clip;
-            }
+                myTarget.selectedAsset = null;
+            } */
+
+            AudioSearchWindow.Open(this,myTarget);
         }
         //GUI.enabled = true;
 
@@ -277,7 +301,7 @@ public class InstasoundsComponentEditor : Editor
         EditorGUILayout.EndVertical();
     }
 
-    private Action ListenForClipFinish(double stopTime, LocalAsset asset)
+    private Action ListenForClipFinish(double stopTime, TempAudioData asset)
     {
          if (EditorApplication.timeSinceStartup >= stopTime)
          {
@@ -290,7 +314,7 @@ public class InstasoundsComponentEditor : Editor
         return () => { };
     }
 
-    private Action PlayClipOnMainThread(AudioClip clip, LocalAsset asset)
+    private Action PlayClipOnMainThread(AudioClip clip, TempAudioData asset)
     {
         // This is a closure to ensure the flag is handled for one-time execution.
         bool played = false;
@@ -318,7 +342,7 @@ public class InstasoundsComponentEditor : Editor
     }
 
 
-    private void PlayClip(AudioClip clip, LocalAsset asset)
+    private void PlayClip(AudioClip clip, TempAudioData asset)
     {
         if (asset.audioSource == null)
         {
@@ -336,6 +360,7 @@ public class InstasoundsComponentEditor : Editor
     {
         if (previewGameObject) DestroyImmediate(previewGameObject.gameObject);
     }
+
 
     private float GetPlaybackPosition(AudioSource audioSource)
     {

@@ -1,3 +1,4 @@
+using Instasounds.Api;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -7,6 +8,8 @@ public class InstasoundsAudioSource : MonoBehaviour
     public string audioUrl = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav";
 
     public AudioSource audioSource;
+
+    public Asset selectedAsset;
 
     public bool playOnLoad;
 
