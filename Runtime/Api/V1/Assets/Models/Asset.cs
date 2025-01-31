@@ -1,19 +1,21 @@
 using Newtonsoft.Json;
+using System;
 
 namespace Instasounds.Api
 {
+    [Serializable]
     public class Asset
     {
         [JsonProperty("_id")]
-        public string Id { get; set; }
+        public string Id;
 
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string Name;
 
         [JsonProperty("url")]
-        public string Url { get; set; }
+        public string Url;
 
         [JsonProperty("iconUrl")]
-        public string IconUrl { get; set; }
+        public string IconUrl;
     }
 }

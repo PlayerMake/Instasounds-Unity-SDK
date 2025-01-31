@@ -7,8 +7,8 @@ using UnityEngine;
 
 public class AudioSearchWindow : EditorWindow
 {
-    private static InstasoundsAudioSource targetComponent;
-    private static InstasoundsComponentEditor _editorComponent;
+    private static RuntimeAudio targetComponent;
+    private static RuntimeAudioEditor _editorComponent;
     private string searchQuery = "";
 
     public class DownloadedData
@@ -70,7 +70,7 @@ public class AudioSearchWindow : EditorWindow
         },
     };
 
-    public static void Open(InstasoundsComponentEditor editorComponent, InstasoundsAudioSource component)
+    public static void Open(RuntimeAudioEditor editorComponent, RuntimeAudio component)
     {
         // Create and show window
         var window = GetWindow<AudioSearchWindow>("Choose an Audio Clip");
@@ -184,10 +184,13 @@ public class AudioSearchWindow : EditorWindow
         if (GUILayout.Button("Select", GUILayout.Width(60), GUILayout.Height(34)))
         {
             targetComponent.selectedAsset = asset;
-            _editorComponent.selectedClipData = new InstasoundsComponentEditor.TempAudioData();
+            _editorComponent.selectedClipData = new RuntimeAudioEditor.TempAudioData();
 
             EditorUtility.SetDirty(targetComponent);
             EditorUtility.SetDirty(_editorComponent);
+
+            Close();
+
             // Close the window after selection
             // Close();
         }

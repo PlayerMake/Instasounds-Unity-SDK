@@ -8,10 +8,10 @@ namespace Instasounds.Editor.UI.Windows
     {
         InstasoundsSettings settings;
 
-        [MenuItem("Tools/Instasounds", false, 0)]
+        [MenuItem("Tools/Runtime Sounds", false, 0)]
         public static void Generate()
         {
-            var window = GetWindow<DeveloperDetailsWindow>("Instasounds");
+            var window = GetWindow<DeveloperDetailsWindow>("Runtime Sounds");
             window.minSize = new Vector2(700, 240);
         }
 
@@ -25,7 +25,7 @@ namespace Instasounds.Editor.UI.Windows
 
                 EnsureResourcePathExists();
 
-                AssetDatabase.CreateAsset(settings, "Assets/Instasounds/Resources/InstasoundsSettings.asset");
+                AssetDatabase.CreateAsset(settings, "Assets/RuntimeSounds/Resources/InstasoundsSettings.asset");
                 EditorUtility.SetDirty(settings);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -34,11 +34,11 @@ namespace Instasounds.Editor.UI.Windows
 
         private void EnsureResourcePathExists()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/Instasounds"))
-                AssetDatabase.CreateFolder("Assets", "Instasounds");
+            if (!AssetDatabase.IsValidFolder("Assets/RuntimeSounds"))
+                AssetDatabase.CreateFolder("Assets", "RuntimeSounds");
 
-            if (!AssetDatabase.IsValidFolder("Assets/Instasounds/Resources"))
-                AssetDatabase.CreateFolder("Assets/Instasounds", "Resources");
+            if (!AssetDatabase.IsValidFolder("Assets/RuntimeSounds/Resources"))
+                AssetDatabase.CreateFolder("Assets/RuntimeSounds", "Resources");
         }
 
         private void OnGUI()
@@ -47,7 +47,7 @@ namespace Instasounds.Editor.UI.Windows
 
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Label($"Welcome to the Instasounds SDK!", new GUIStyle()
+                GUILayout.Label($"Welcome to Runtime Sounds!", new GUIStyle()
                 {
                     fontStyle = FontStyle.Bold,
                     normal = new GUIStyleState()

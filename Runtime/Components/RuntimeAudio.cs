@@ -1,13 +1,14 @@
 using Instasounds.Api;
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class InstasoundsAudioSource : MonoBehaviour
+public class RuntimeAudio : MonoBehaviour
 {
-    public string audioUrl = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav";
-
     public AudioSource audioSource;
+
+    public string id;
 
     public Asset selectedAsset;
 
@@ -15,12 +16,12 @@ public class InstasoundsAudioSource : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(DownloadAndPlayAudio(audioUrl));
+        if (selectedAsset != null && !string.IsNullOrEmpty(selectedAsset.Url))
+            StartCoroutine(DownloadAndPlayAudio(selectedAsset.Url));
     }
 
     IEnumerator DownloadAndPlayAudio(string url)
     {
-
         using (var request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV))
         {
             yield return request.SendWebRequest();
