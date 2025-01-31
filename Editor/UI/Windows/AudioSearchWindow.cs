@@ -11,7 +11,14 @@ public class AudioSearchWindow : EditorWindow
     private static InstasoundsComponentEditor _editorComponent;
     private string searchQuery = "";
 
-    class TempAudioData
+    public class DownloadedData
+    {
+        public TempAudioData SceneData = new TempAudioData();
+
+        public Asset Asset;
+    }
+
+    public class TempAudioData
     {
         public bool Playing;
 
@@ -20,8 +27,6 @@ public class AudioSearchWindow : EditorWindow
         public AudioSource audioSource;
 
         public float CurrentTime;
-
-        public Asset Asset;
     }
 
     private GameObject previewGameObject;
@@ -43,9 +48,9 @@ public class AudioSearchWindow : EditorWindow
 
     private double nextRepaintTime = 0;
 
-    private List<TempAudioData> foundClips = new List<TempAudioData>()
+    private List<DownloadedData> foundClips = new List<DownloadedData>()
     {
-        new TempAudioData()
+        new DownloadedData()
         {
             Asset = new Asset()
             {
@@ -54,22 +59,13 @@ public class AudioSearchWindow : EditorWindow
             Id = "Test",
             },
         },
-        new TempAudioData()
+        new DownloadedData()
         {
             Asset = new Asset()
             {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey 1",
+            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/water.wav",
+            Name = "Water 1",
             Id = "Test1",
-            },
-        },
-         new TempAudioData()
-        {
-            Asset = new Asset()
-            {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey 2",
-            Id = "Test2",
             },
         },
     };
@@ -115,11 +111,11 @@ public class AudioSearchWindow : EditorWindow
 
         foreach (var clip in foundClips)
         {
-            RenderAudioClip(clip);
+            RenderAudioClip(clip.Asset, clip.SceneData);
         }
     }
 
-    private void RenderAudioClip(TempAudioData clip)
+    private void RenderAudioClip(Asset asset, TempAudioData clipData)
     {
         EditorGUILayout.BeginVertical(new GUIStyle()
         {
@@ -137,18 +133,18 @@ public class AudioSearchWindow : EditorWindow
         });
         GUI.DrawTexture(waveformRect, new Texture2D(200, 10));
 
-        if (clip.audioSource != null && clip.audioSource.isPlaying)
+        if (clipData.audioSource != null && clipData.audioSource.isPlaying)
         {
-            clip.CurrentTime = clip.audioSource.time;
-            float playbackX = waveformRect.x + GetPlaybackPosition(clip.audioSource) * waveformRect.width;
+            clipData.CurrentTime = clipData.audioSource.time;
+            float playbackX = waveformRect.x + GetPlaybackPosition(clipData.audioSource) * waveformRect.width;
             Handles.color = Color.red;
             Handles.DrawLine(new Vector3(playbackX, waveformRect.y), new Vector3(playbackX, waveformRect.y + waveformRect.height));
         }
 
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(clip.Asset.Name, GUILayout.Width(70));
+        EditorGUILayout.LabelField(asset.Name, GUILayout.Width(70));
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField(FormatTime(clip.CurrentTime), GUILayout.Width(60));
+        EditorGUILayout.LabelField(FormatTime(clipData.CurrentTime), GUILayout.Width(60));
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.EndVertical();
@@ -157,26 +153,26 @@ public class AudioSearchWindow : EditorWindow
         //    GUI.enabled = false;
 
         // Play Button
-        if (GUILayout.Button(clip.Playing ? "Stop" : "▶ Play", GUILayout.Width(60), GUILayout.Height(34)))
+        if (GUILayout.Button(clipData.Playing ? "Stop" : "▶ Play", GUILayout.Width(60), GUILayout.Height(34)))
         {
-            if (clip.Playing)
+            if (clipData.Playing)
             {
-                clip.Playing = false;
-                clip.audioSource.Stop();
-                clip.CurrentTime = 0;
-                DestroyImmediate(clip.audioSource);
-                clip.audioSource = null;
-                EditorApplication.update -= clip.clipendCallback;
+                clipData.Playing = false;
+                clipData.audioSource.Stop();
+                clipData.CurrentTime = 0;
+                DestroyImmediate(clipData.audioSource);
+                clipData.audioSource = null;
+                EditorApplication.update -= clipData.clipendCallback;
             }
             else
             {
-                clip.Playing = true;
+                clipData.Playing = true;
 
                 InstasoundsSdk
-                    .LoadAudioClipAsync(clip.Asset.Url)
+                    .LoadAudioClipAsync(asset.Url)
                     .ContinueWith(p =>
                     {
-                        updateCallback = () => PlayClipOnMainThread(p.Result, clip);
+                        updateCallback = () => PlayClipOnMainThread(p.Result, clipData);
 
                         EditorApplication.update += updateCallback;
                     });
@@ -184,14 +180,11 @@ public class AudioSearchWindow : EditorWindow
 
         }
 
+
         if (GUILayout.Button("Select", GUILayout.Width(60), GUILayout.Height(34)))
         {
-            targetComponent.selectedAsset = clip.Asset;
-
-            _editorComponent.selectedClip = new InstasoundsComponentEditor.TempAudioData()
-            {
-                Asset = clip.Asset,
-            };
+            targetComponent.selectedAsset = asset;
+            _editorComponent.selectedClipData = new InstasoundsComponentEditor.TempAudioData();
 
             EditorUtility.SetDirty(targetComponent);
             EditorUtility.SetDirty(_editorComponent);

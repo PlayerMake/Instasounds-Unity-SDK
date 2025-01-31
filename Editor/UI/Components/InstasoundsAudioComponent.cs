@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Collections.Generic;
 using Instasounds.V1;
 using System;
 using Instasounds.Api;
@@ -17,45 +16,9 @@ public class InstasoundsComponentEditor : Editor
         public AudioSource audioSource;
 
         public float CurrentTime;
-
-        public Asset Asset;
     }
 
-    private string searchText = "";
-    private bool searchOpen = true;
-
-    public TempAudioData selectedClip;
-
-    private List<TempAudioData> foundClips = new List<TempAudioData>()
-    { 
-        new TempAudioData()
-        {
-            Asset = new Asset()
-            {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey",
-            Id = "Test",
-            },
-        },
-        new TempAudioData()
-        {
-            Asset = new Asset()
-            {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey 1",
-            Id = "Test1",
-            },
-        },
-         new TempAudioData()
-        {
-            Asset = new Asset()
-            {
-            Url = "https://playermake-permanent-files.s3.eu-west-2.amazonaws.com/audio/baboon_monkey.wav",
-            Name = "Monkey 2",
-            Id = "Test2",
-            },
-        },
-    };
+    public TempAudioData selectedClipData = new TempAudioData();
 
     private GameObject previewGameObject;
 
@@ -106,13 +69,7 @@ public class InstasoundsComponentEditor : Editor
 
         if (myTarget.selectedAsset != null)
         {
-            if (selectedClip == null)
-                selectedClip = new TempAudioData()
-                {
-                    Asset = myTarget.selectedAsset,
-                };
-
-            RenderAudioClip(selectedClip);
+            RenderAudioClip(myTarget.selectedAsset, selectedClipData);
         }
         else
         {
@@ -173,38 +130,6 @@ public class InstasoundsComponentEditor : Editor
             wordWrap = true,
         });
 
-
-        searchOpen = EditorGUILayout.Foldout(searchOpen, "Change Audio Clip", new GUIStyle(EditorStyles.foldout)
-        {
-            fontStyle = FontStyle.Bold,
-            normal = new GUIStyleState()
-            {
-                textColor = Color.white,
-            },
-            active = new GUIStyleState()
-            {
-                textColor = Color.white
-            },
-            onNormal = new GUIStyleState()
-            {
-                textColor = Color.white
-            }
-        });
-
-
-        if (searchOpen)
-        {
-            EditorGUILayout.LabelField("Search Audio Clips:");
-
-            searchText = EditorGUILayout.TextField("Name", searchText);
-
-            foreach (var clip in foundClips)
-            {
-                RenderAudioClip(clip);
-            }
-        }
-
-
         // Apply changes
         if (GUI.changed)
         {
@@ -212,7 +137,7 @@ public class InstasoundsComponentEditor : Editor
         }
     }
 
-    private void RenderAudioClip (TempAudioData clip)
+    private void RenderAudioClip (Asset asset, TempAudioData clipData)
     {
         EditorGUILayout.BeginVertical(new GUIStyle()
         {
@@ -230,18 +155,18 @@ public class InstasoundsComponentEditor : Editor
         });
         GUI.DrawTexture(waveformRect, new Texture2D(200, 10));
 
-        if (clip.audioSource != null && clip.audioSource.isPlaying)
+        if (clipData.audioSource != null && clipData.audioSource.isPlaying)
         {
-            clip.CurrentTime = clip.audioSource.time;
-            float playbackX = waveformRect.x + GetPlaybackPosition(clip.audioSource) * waveformRect.width;
+            clipData.CurrentTime = clipData.audioSource.time;
+            float playbackX = waveformRect.x + GetPlaybackPosition(clipData.audioSource) * waveformRect.width;
             Handles.color = Color.red;
             Handles.DrawLine(new Vector3(playbackX, waveformRect.y), new Vector3(playbackX, waveformRect.y + waveformRect.height));
         }
 
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(clip.Asset.Name, GUILayout.Width(70));
+        EditorGUILayout.LabelField(asset.Name, GUILayout.Width(70));
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField(FormatTime(clip.CurrentTime), GUILayout.Width(60));
+        EditorGUILayout.LabelField(FormatTime(clipData.CurrentTime), GUILayout.Width(60));
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.EndVertical();
@@ -250,26 +175,26 @@ public class InstasoundsComponentEditor : Editor
         //    GUI.enabled = false;
 
         // Play Button
-        if (GUILayout.Button(clip.Playing ? "Stop" : "▶ Play", GUILayout.Width(60), GUILayout.Height(34)))
+        if (GUILayout.Button(clipData.Playing ? "Stop" : "▶ Play", GUILayout.Width(60), GUILayout.Height(34)))
         {
-            if (clip.Playing)
+            if (clipData.Playing)
             {
-                clip.Playing = false;
-                clip.audioSource.Stop();
-                clip.CurrentTime = 0;
-                DestroyImmediate(clip.audioSource);
-                clip.audioSource = null;
-                EditorApplication.update -= clip.clipendCallback;
+                clipData.Playing = false;
+                clipData.audioSource.Stop();
+                clipData.CurrentTime = 0;
+                DestroyImmediate(clipData.audioSource);
+                clipData.audioSource = null;
+                EditorApplication.update -= clipData.clipendCallback;
             }
             else
             {
-                clip.Playing = true;
+                clipData.Playing = true;
 
                 InstasoundsSdk
-                    .LoadAudioClipAsync(clip.Asset.Url)
+                    .LoadAudioClipAsync(asset.Url)
                     .ContinueWith(p =>
                     {
-                        updateCallback = () => PlayClipOnMainThread(p.Result, clip);
+                        updateCallback = () => PlayClipOnMainThread(p.Result, clipData);
 
                         EditorApplication.update += updateCallback;
                     });
@@ -314,7 +239,7 @@ public class InstasoundsComponentEditor : Editor
         return () => { };
     }
 
-    private Action PlayClipOnMainThread(AudioClip clip, TempAudioData asset)
+    private Action PlayClipOnMainThread(AudioClip clip, TempAudioData audioMetadata)
     {
         // This is a closure to ensure the flag is handled for one-time execution.
         bool played = false;
@@ -326,14 +251,14 @@ public class InstasoundsComponentEditor : Editor
         else
         {
             played = true;
-            PlayClip(clip, asset);
+            PlayClip(clip, audioMetadata);
 
             // Schedule an action after clip.length seconds
             double stopTime = EditorApplication.timeSinceStartup + clip.length;
 
-            asset.clipendCallback = () => ListenForClipFinish(stopTime, asset);
+            audioMetadata.clipendCallback = () => ListenForClipFinish(stopTime, audioMetadata);
 
-            EditorApplication.update += asset.clipendCallback;
+            EditorApplication.update += audioMetadata.clipendCallback;
 
             EditorApplication.update -= updateCallback; // Remove the callback
         }
@@ -342,18 +267,18 @@ public class InstasoundsComponentEditor : Editor
     }
 
 
-    private void PlayClip(AudioClip clip, TempAudioData asset)
+    private void PlayClip(AudioClip clip, TempAudioData audioMetadata)
     {
-        if (asset.audioSource == null)
+        if (audioMetadata.audioSource == null)
         {
-            asset.audioSource = previewGameObject.AddComponent<AudioSource>();
+            audioMetadata.audioSource = previewGameObject.AddComponent<AudioSource>();
         }
 
-        asset.audioSource.Stop();
-        asset.audioSource.clip = clip;
-        asset.audioSource.volume = 1f; // Ensure volume is set
-        asset.audioSource.mute = false; // Ensure it's not muted
-        asset.audioSource.Play();
+        audioMetadata.audioSource.Stop();
+        audioMetadata.audioSource.clip = clip;
+        audioMetadata.audioSource.volume = 1f; // Ensure volume is set
+        audioMetadata.audioSource.mute = false; // Ensure it's not muted
+        audioMetadata.audioSource.Play();
     }
 
     void OnDisable()
