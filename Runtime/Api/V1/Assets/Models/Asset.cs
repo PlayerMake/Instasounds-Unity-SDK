@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using System;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     [Serializable]
     public class Asset

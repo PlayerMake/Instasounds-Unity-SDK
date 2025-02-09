@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public abstract class BaseApi
     {
-        private readonly InstasoundsSettings _settings;
+        private readonly RuntimeSoundsSettings _settings;
 
-        public BaseApi(InstasoundsSettings settings)
+        public BaseApi(RuntimeSoundsSettings settings)
         {
             _settings = settings;
         }
@@ -107,6 +107,5 @@ namespace Instasounds.Api
 
             public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
         }
-
     }
 }

@@ -1,25 +1,27 @@
-using Instasounds.Api;
+using RuntimeSounds.Api;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Instasounds.V1
+namespace RuntimeSounds.V1
 {
-    public static class InstasoundsSdk
+    public static class RuntimeSoundsSdk
     {
-        private static InstasoundsSettings _developerSettings;
+        private static RuntimeSoundsSettings _developerSettings;
         private static AssetApi _assetApi;
 
         private static void Init()
         {
             if (_developerSettings == null)
-                _developerSettings = Resources.Load<InstasoundsSettings>("PlayerMakeSettings");
+                _developerSettings = Resources.Load<RuntimeSoundsSettings>("RuntimeSoundsSettings");
 
             if (_assetApi == null)
                 _assetApi = new AssetApi(_developerSettings);
         }
 
         public static async Task<(List<Asset>, Pagination)> ListAssetsAsync(
+            string searchTerm = "",
+            string selectedSort = "",
             int limit = 10,
             int skip = 0,
             RequestCallbacks callbacks = null
@@ -31,7 +33,8 @@ namespace Instasounds.V1
             {
                 Params = new AssetListQueryParams()
                 {
-                    ProjectId = _developerSettings.ProjectId,
+                    Sort = selectedSort,
+                    Search = searchTerm,
                     Limit = limit,
                     Skip = skip
                 }

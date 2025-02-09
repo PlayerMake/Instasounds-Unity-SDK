@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public class PaginationQueryParams
     {

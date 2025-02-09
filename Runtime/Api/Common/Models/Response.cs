@@ -1,4 +1,4 @@
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public class Response
     {

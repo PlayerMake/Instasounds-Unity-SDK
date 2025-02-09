@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public static class FileApi
     {

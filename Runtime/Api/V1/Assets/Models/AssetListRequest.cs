@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public class AssetListRequest
     {
@@ -9,7 +9,10 @@ namespace Instasounds.Api
 
     public class AssetListQueryParams : PaginationQueryParams
     {
-        [JsonProperty("projectId")]
-        public string ProjectId { get; set; }
+        [JsonProperty("search")]
+        public string Search { get; set; }
+
+        [JsonProperty("sort")]
+        public string Sort { get; set; }
     }
 }

@@ -1,12 +1,12 @@
-using Instasounds.Api;
+using RuntimeSounds.Api;
 using UnityEditor;
 using UnityEngine;
 
-namespace Instasounds.Editor.UI.Windows
+namespace RuntimeSounds.Editor.UI.Windows
 {
     public class DeveloperDetailsWindow : EditorWindow
     {
-        InstasoundsSettings settings;
+        RuntimeSoundsSettings settings;
 
         [MenuItem("Tools/Runtime Sounds", false, 0)]
         public static void Generate()
@@ -17,15 +17,15 @@ namespace Instasounds.Editor.UI.Windows
 
         private void OnEnable()
         {
-            settings = Resources.Load<InstasoundsSettings>("PlayerMakeSettings");
+            settings = Resources.Load<RuntimeSoundsSettings>("RuntimeSoundsSettings");
 
             if (settings == null)
             {
-                settings = CreateInstance<InstasoundsSettings>();
+                settings = CreateInstance<RuntimeSoundsSettings>();
 
                 EnsureResourcePathExists();
 
-                AssetDatabase.CreateAsset(settings, "Assets/RuntimeSounds/Resources/InstasoundsSettings.asset");
+                AssetDatabase.CreateAsset(settings, "Assets/RuntimeSounds/Resources/RuntimeSoundsSettings.asset");
                 EditorUtility.SetDirty(settings);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -83,7 +83,6 @@ namespace Instasounds.Editor.UI.Windows
                 margin = new RectOffset(5, 0, 0, 0),
             });
 
-            settings.ApiProxyUrl = EditorGUILayout.TextField("API Proxy Url", settings.ApiProxyUrl);
             settings.ApiKey = EditorGUILayout.TextField("API Key", settings.ApiKey);
 
             using (new GUILayout.HorizontalScope(new GUIStyle()

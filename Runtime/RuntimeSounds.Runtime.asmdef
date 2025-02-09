@@ -1,9 +1,7 @@
 {
-    "name": "PlayerMake.Runtime",
+    "name": "RuntimeSounds.Runtime",
     "rootNamespace": "",
-    "references": [
-        "glTFast"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

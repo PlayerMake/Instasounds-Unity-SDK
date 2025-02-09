@@ -1,14 +1,14 @@
 using System.Threading.Tasks;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public class AssetApi : BaseApi
     {
         public const string Resource = "assets";
 
-        private readonly InstasoundsSettings _settings;
+        private readonly RuntimeSoundsSettings _settings;
 
-        public AssetApi(InstasoundsSettings settings) : base(settings)
+        public AssetApi(RuntimeSoundsSettings settings) : base(settings)
         {
             _settings = settings;
         }

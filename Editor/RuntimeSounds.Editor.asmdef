@@ -1,9 +1,8 @@
 {
-    "name": "PlayerMake.Editor",
+    "name": "RuntimeSounds.Editor",
     "rootNamespace": "",
     "references": [
-        "glTFast",
-        "PlayerMake.Runtime"
+        "RuntimeSounds.Runtime"
     ],
     "includePlatforms": [
         "Editor"

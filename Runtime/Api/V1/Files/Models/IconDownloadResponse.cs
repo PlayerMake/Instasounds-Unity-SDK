@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public class IconDownloadResponse
     {

@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public class AssetListResponse : Response
     {

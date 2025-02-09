@@ -6,7 +6,7 @@ using System;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace Instasounds.Api
+namespace RuntimeSounds.Api
 {
     public static class QueryBuilderExtensions
     {
@@ -34,7 +34,6 @@ namespace Instasounds.Api
                 }
                 else if (value is IEnumerable<string> stringArray)
                 {
-                    // Handle arrays of strings by appending multiple key-value pairs
                     foreach (var stringValue in stringArray)
                     {
                         queryString.Append($"{Uri.EscapeDataString(key.ToString())}={Uri.EscapeDataString(stringValue)}&");

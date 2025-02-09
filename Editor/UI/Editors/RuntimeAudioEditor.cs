@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using Instasounds.V1;
 using System;
-using Instasounds.Api;
+using RuntimeSounds.Editor.UI.Windows;
+using RuntimeSounds.Api;
+using RuntimeSounds.V1;
 
 [CustomEditor(typeof(RuntimeAudio))]
 public class RuntimeAudioEditor : Editor
@@ -204,7 +205,7 @@ public class RuntimeAudioEditor : Editor
             {
                 clipData.Playing = true;
 
-                InstasoundsSdk
+                RuntimeSoundsSdk
                     .LoadAudioClipAsync(asset.Url)
                     .ContinueWith(p =>
                     {
@@ -304,6 +305,8 @@ public class RuntimeAudioEditor : Editor
     void OnDisable()
     {
         if (previewGameObject) DestroyImmediate(previewGameObject.gameObject);
+
+        AudioSearchWindow.ForceClose();
     }
 
 
