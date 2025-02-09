@@ -1,20 +1,21 @@
 {
-  "name": "com.instasounds.sdk",
+  "name": "com.runtimesounds.sdk",
   "version": "0.0.1",
-  "displayName": "Instasounds SDK",
-  "description": "The official Instasounds SDK. Easy to setup, and built to power real time audio in games.",
+  "displayName": "Runtime Sounds SDK",
+  "description": "The official Runtime Sounds SDK. Easy to setup, and built to power real time audio in games.",
   "unity": "2021.3",
   "author": {
-    "name": "Instasounds",
-    "email": "info@instasounds.com",
-    "url": "https://instasounds.com"
+    "name": "Runtime Sounds",
+    "email": "info@runtimesounds.com",
+    "url": "https://runtimesounds.com"
   },
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
   "samples": [],
   "keywords": [
-    "instasounds",
+    "runtime",
+    "runtime sounds",
     "audio",
     "sound manager",
     "sounds",
