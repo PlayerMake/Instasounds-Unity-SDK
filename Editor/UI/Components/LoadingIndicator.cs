@@ -31,38 +31,26 @@ namespace RuntimeSounds.Editor.UI.Components
             currentFrame = (currentFrame + 1) % (maxFrame + 1);
         }
 
-        public void Render(params GUILayoutOption[] layoutOptions)
+        public void Render(GUIStyle style, params GUILayoutOption[] layoutOptions)
         {
             if (currentFrame == 0)
             {
-                EditorGUILayout.LabelField("loading", new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                }, layoutOptions);
+                EditorGUILayout.LabelField("loading", style, layoutOptions);
             }
 
             if (currentFrame == 1)
             {
-                EditorGUILayout.LabelField("loading.", new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                }, layoutOptions);
+                EditorGUILayout.LabelField("loading.", style, layoutOptions);
             }
 
             if (currentFrame == 2)
             {
-                EditorGUILayout.LabelField("loading..", new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                }, layoutOptions);
+                EditorGUILayout.LabelField("loading..", style, layoutOptions);
             }
 
             if (currentFrame == 3)
             {
-                EditorGUILayout.LabelField("loading...", new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                }, layoutOptions);
+                EditorGUILayout.LabelField("loading...", style, layoutOptions);
             }
         }
     }

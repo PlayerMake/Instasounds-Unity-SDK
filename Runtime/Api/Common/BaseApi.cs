@@ -84,9 +84,6 @@ namespace RuntimeSounds.Api
                 return JsonConvert.DeserializeObject<TResponse>(webRequest.downloadHandler.text);
             }
 
-            Debug.Log(webRequest.url);
-            Debug.Log(webRequest.error);
-
             callbacks?.OnError?.Invoke(webRequest.error);
 
             return new TResponse()

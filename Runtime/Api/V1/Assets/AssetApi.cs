@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RuntimeSounds.Api
@@ -20,7 +21,11 @@ namespace RuntimeSounds.Api
             return await GetAsync<AssetListResponse>(new Request()
             {
                 Url = $"{_settings.ApiBaseUrl}/v1/{Resource}{queryString}",
-                Callbacks = callbacks
+                Callbacks = callbacks,
+                Headers = new Dictionary<string, string>()
+                {
+                    { "x-api-key", _settings.ApiKey }
+                }
             });
         }
     }

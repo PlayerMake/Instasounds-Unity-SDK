@@ -12,52 +12,11 @@ namespace RuntimeSounds.Editor.UI.Windows
 {
     public class AudioSearchWindow : EditorWindow
     {
-        private static RuntimeAudio targetComponent;
-        private static RuntimeAudioEditor _editorComponent;
+        RuntimeSoundsSettings settings;
 
-        private static string searchQuery = "";
-        private static int pageSize = 2;
-
-        private Option[] sortOptions = null;
-        private static string selectedSort = "relevance";
-
-        private Debouncer debouncer;
-
-        public class DownloadedData
-        {
-            public TempAudioData SceneData = new TempAudioData();
-
-            public Asset Asset;
-        }
-
-        public class TempAudioData
-        {
-            public bool Playing;
-
-            public EditorApplication.CallbackFunction clipendCallback;
-
-            public AudioSource audioSource;
-
-            public float CurrentTime;
-        }
-
-        private GameObject previewGameObject;
-
-        private SelectInput sortSelectInput;
-        private LoadingIndicator loadingIndicator;
-
-        void OnEnable()
-        {
-            debouncer = new Debouncer(0.5f);
-
-            if (!previewGameObject)
-            {
-                previewGameObject = EditorUtility.CreateGameObjectWithHideFlags("PreviewAudio", HideFlags.HideAndDontSave);
-            }
-
-            if (sortSelectInput == null)
-            {
-                sortOptions = new List<Option>() {
+        private static readonly int pageSize = 10;
+        private static readonly Option[] sortOptions =
+            new List<Option>() {
                 new Option()
                 {
                     Label = "Relevance",
@@ -72,29 +31,28 @@ namespace RuntimeSounds.Editor.UI.Windows
                 {
                     Label = "Oldest",
                     Value = "oldest"
-                }
-            }.ToArray();
+                } }
+        .ToArray();
 
-                sortSelectInput = new SelectInput();
-                sortSelectInput.Init(sortOptions, selectedSort);
-            }
+        private static RuntimeAudio _component;
+        private static RuntimeAudioEditor _editorComponent;
 
-            if (loadingIndicator == null)
-            {
-                loadingIndicator = new LoadingIndicator();
-            }
-        }
+        private static string searchQuery = "";
+        private static string selectedSort = "relevance";
 
-        private void OnDestroy()
+        private Debouncer debouncer;
+
+        public class DownloadedData
         {
-            foreach (var clip in foundClips)
-            {
-                if (clip?.SceneData?.audioSource != null)
-                    DestroyImmediate(clip.SceneData.audioSource);
-            }
+            public EditorAudioClip SceneData = new EditorAudioClip();
 
-            EditorApplication.update -= repaintCallback;
+            public Asset Asset;
         }
+
+        private GameObject previewGameObject;
+
+        private SelectInput sortSelectInput;
+        private LoadingIndicator loadingIndicator;
 
         private EditorApplication.CallbackFunction updateCallback;
         private EditorApplication.CallbackFunction repaintCallback;
@@ -105,10 +63,93 @@ namespace RuntimeSounds.Editor.UI.Windows
         private static int currentPage = 1;
 
         private static bool loading = false;
-
         private static bool forceClose = false;
 
+        private static string tier = string.Empty;
+        private static bool tierLoading = false;
+
         private static List<DownloadedData> foundClips = new List<DownloadedData>();
+
+        private string apiKey;
+
+        void OnEnable()
+        {
+            settings = Resources.Load<RuntimeSoundsSettings>("RuntimeSoundsSettings");
+
+            if (settings == null)
+            {
+                settings = CreateInstance<RuntimeSoundsSettings>();
+
+                EnsureResourcePathExists();
+
+                AssetDatabase.CreateAsset(settings, "Assets/RuntimeSounds/Resources/RuntimeSoundsSettings.asset");
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+
+            debouncer = new Debouncer(0.5f);
+
+            if (!previewGameObject)
+            {
+                previewGameObject = EditorUtility.CreateGameObjectWithHideFlags("PreviewAudio", HideFlags.HideAndDontSave);
+            }
+
+            if (sortSelectInput == null)
+            {
+                sortSelectInput = new SelectInput();
+                sortSelectInput.Init(sortOptions, selectedSort);
+            }
+
+            if (loadingIndicator == null)
+            {
+                loadingIndicator = new LoadingIndicator();
+            }
+
+            apiKey = settings.ApiKey;
+            VerifyTier();
+        }
+
+        private void Update()
+        {
+            if (apiKey != settings.ApiKey)
+            {
+                apiKey = settings.ApiKey;
+                VerifyTier();
+            }
+        }
+
+        private void VerifyTier()
+        {
+            if (tierLoading)
+                return;
+
+            tierLoading = true;
+
+            try
+            {
+                RuntimeSoundsSdk
+                    .VerifyApiKeyAsync(settings.ApiKey)
+                    .ContinueWith(p =>
+                    {
+                        tier = p?.Result?.Tier;
+                        tierLoading = false;
+                    });
+            }
+            catch
+            {
+                tierLoading = false;
+            }
+        }
+
+        private void EnsureResourcePathExists()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/RuntimeSounds"))
+                AssetDatabase.CreateFolder("Assets", "RuntimeSounds");
+
+            if (!AssetDatabase.IsValidFolder("Assets/RuntimeSounds/Resources"))
+                AssetDatabase.CreateFolder("Assets/RuntimeSounds", "Resources");
+        }
 
         private static void LoadItems(int page)
         {
@@ -150,29 +191,20 @@ namespace RuntimeSounds.Editor.UI.Windows
             }
         }
 
-        public static void ForceClose()
-        {
-            forceClose = true;
-        }
-
         public static void Open(RuntimeAudioEditor editorComponent, RuntimeAudio component)
         {
             LoadItems(currentPage);
 
-            // Create and show window
             var window = GetWindow<AudioSearchWindow>("Audio Picker");
             window.minSize = new Vector2(380, 300);
 
-            // Pass the target component
-            targetComponent = component;
+            _component = component;
             _editorComponent = editorComponent;
         }
 
-        public static string FormatTime(float totalSeconds)
+        public static void ForceClose()
         {
-            var time = TimeSpan.FromSeconds(totalSeconds);
-
-            return string.Format("{0:00}:{1:00}:{2:00}", time.Minutes, time.Seconds, Math.Round((double)time.Milliseconds / 10f));
+            forceClose = true;
         }
 
         private void OnGUI()
@@ -202,6 +234,47 @@ namespace RuntimeSounds.Editor.UI.Windows
             {
                 margin = new RectOffset(10, 10, 6, 0)
             });
+
+            if (!tierLoading & string.IsNullOrEmpty(tier))
+            {
+                EditorGUILayout.LabelField($"To start using Runtime Sounds, you first need to setup your account. You can do so below.", new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                }, GUILayout.ExpandWidth(true));
+
+                EditorGUILayout.BeginVertical(new GUIStyle()
+                {
+                    margin = new RectOffset(0, 0, 6, 0)
+                });
+
+                EditorGUILayout.EndVertical();
+
+                if (GUILayout.Button("Setup Account", GUILayout.ExpandWidth(true)))
+                {
+                    DeveloperDetailsWindow.Open();
+                }
+
+                EditorGUILayout.BeginVertical(new GUIStyle()
+                {
+                    margin = new RectOffset(0, 0, 6, 0)
+                });
+
+                EditorGUILayout.EndVertical();
+
+                EditorGUILayout.LabelField($"You can still browse the sound library and preview sounds below, but you won't be able to use them until you set your API Key in Tools -> Runtime Sounds.", new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                }, GUILayout.ExpandWidth(true));
+
+                EditorGUILayout.BeginVertical(new GUIStyle()
+                {
+                    margin = new RectOffset(0, 0, 20, 0)
+                });
+
+                EditorGUILayout.EndVertical();
+            }
 
             EditorGUILayout.BeginHorizontal();
 
@@ -243,16 +316,35 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             EditorGUILayout.EndVertical();
 
+            EditorGUILayout.BeginHorizontal();
+
+            if (!tierLoading & !string.IsNullOrEmpty(tier))
+            {
+                EditorGUILayout.LabelField("Account Level: " + tier);
+
+                EditorGUILayout.BeginVertical(new GUIStyle()
+                {
+                    margin = new RectOffset(0, 0, 6, 0)
+                });
+
+                EditorGUILayout.EndVertical();
+            }
+
             if (loading)
-                loadingIndicator.Render(GUILayout.ExpandWidth(true));
+                loadingIndicator.Render(new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleRight,
+                }, GUILayout.ExpandWidth(true));
 
             if (!loading)
             {
                 EditorGUILayout.LabelField($"{totalItems} sound{(totalItems == 1 ? "" : "s")} found", new GUIStyle(EditorStyles.label)
                 {
-                    alignment = TextAnchor.MiddleCenter,
+                    alignment = TextAnchor.MiddleRight,
                 }, GUILayout.ExpandWidth(true));
             }
+
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginVertical(new GUIStyle()
             {
@@ -304,12 +396,11 @@ namespace RuntimeSounds.Editor.UI.Windows
             }
 
             EditorGUILayout.EndVertical();
-
             EditorGUILayout.EndVertical();
         }
 
 
-        private void RenderAudioClip(Asset asset, TempAudioData clipData)
+        private void RenderAudioClip(Asset asset, EditorAudioClip clipData)
         {
             EditorGUILayout.BeginVertical(new GUIStyle()
             {
@@ -317,140 +408,44 @@ namespace RuntimeSounds.Editor.UI.Windows
             });
             EditorGUILayout.BeginHorizontal();
 
-            EditorGUILayout.BeginVertical();
+            EditorAudio.DrawAudioClip(asset, clipData, previewGameObject, updateCallback, true);
 
-            Rect waveformRect = GUILayoutUtility.GetRect(100, 10, new GUIStyle()
+            if (!string.IsNullOrEmpty(asset.Url) && !(asset.IsPremium && tier == "Free Tier"))
             {
-                margin = new RectOffset(0, 0, 7, 0)
-            });
-            GUI.DrawTexture(waveformRect, new Texture2D(200, 10));
-
-            if (clipData.audioSource != null && clipData.audioSource.isPlaying)
-            {
-                clipData.CurrentTime = clipData.audioSource.time;
-                float playbackX = waveformRect.x + GetPlaybackPosition(clipData.audioSource) * waveformRect.width;
-                Handles.color = Color.red;
-                Handles.DrawLine(new Vector3(playbackX, waveformRect.y), new Vector3(playbackX, waveformRect.y + waveformRect.height));
-            }
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(asset.Name, GUILayout.Width(70));
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField(FormatTime(clipData.CurrentTime), GUILayout.Width(60));
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.EndVertical();
-
-            //if (clip.Playing)
-            //    GUI.enabled = false;
-
-            // Play Button
-            if (GUILayout.Button(clipData.Playing ? "Stop" : "▶ Play", GUILayout.Width(60), GUILayout.Height(34)))
-            {
-                if (clipData.Playing)
+                if (GUILayout.Button("Select", GUILayout.Width(60), GUILayout.Height(34)))
                 {
-                    clipData.Playing = false;
-                    clipData.audioSource.Stop();
-                    clipData.CurrentTime = 0;
-                    DestroyImmediate(clipData.audioSource);
-                    clipData.audioSource = null;
-                    EditorApplication.update -= clipData.clipendCallback;
+                    _component.selectedAsset = asset;
+                    _editorComponent.selectedClipData = new EditorAudioClip();
+
+                    EditorUtility.SetDirty(_component);
+                    EditorUtility.SetDirty(_editorComponent);
+
+                    Close();
                 }
-                else
-                {
-                    clipData.Playing = true;
-
-                    RuntimeSoundsSdk
-                        .LoadAudioClipAsync(asset.Url)
-                        .ContinueWith(p =>
-                        {
-                            updateCallback = () => PlayClipOnMainThread(p.Result, clipData);
-
-                            EditorApplication.update += updateCallback;
-                        });
-                }
-
             }
 
-
-            if (GUILayout.Button("Select", GUILayout.Width(60), GUILayout.Height(34)))
+            if (string.IsNullOrEmpty(asset.Url) || (asset.IsPremium && tier == "Free Tier"))
             {
-                targetComponent.selectedAsset = asset;
-                _editorComponent.selectedClipData = new RuntimeAudioEditor.TempAudioData();
-
-                EditorUtility.SetDirty(targetComponent);
-                EditorUtility.SetDirty(_editorComponent);
-
-                Close();
-
-                // Close the window after selection
-                // Close();
+                GUI.enabled = false;
+                if (GUILayout.Button("Locked", GUILayout.Width(60), GUILayout.Height(34)))
+                {
+                }
+                GUI.enabled = true;
             }
-            //GUI.enabled = true;
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
         }
 
-        private Action ListenForClipFinish(double stopTime, TempAudioData asset)
+        private void OnDestroy()
         {
-            if (EditorApplication.timeSinceStartup >= stopTime)
+            foreach (var clip in foundClips)
             {
-                asset.Playing = false;
-                DestroyImmediate(asset.audioSource);
-                asset.audioSource = null;
-                EditorApplication.update -= asset.clipendCallback;
+                if (clip?.SceneData?.audioSource != null)
+                    DestroyImmediate(clip.SceneData.audioSource);
             }
 
-            return () => { };
-        }
-
-        private Action PlayClipOnMainThread(AudioClip clip, TempAudioData asset)
-        {
-            // This is a closure to ensure the flag is handled for one-time execution.
-            bool played = false;
-
-            if (played)
-            {
-                EditorApplication.update -= updateCallback;
-            }
-            else
-            {
-                played = true;
-                PlayClip(clip, asset);
-
-                // Schedule an action after clip.length seconds
-                double stopTime = EditorApplication.timeSinceStartup + clip.length;
-
-                asset.clipendCallback = () => ListenForClipFinish(stopTime, asset);
-
-                EditorApplication.update += asset.clipendCallback;
-
-                EditorApplication.update -= updateCallback; // Remove the callback
-            }
-
-            return () => { };
-        }
-
-
-        private void PlayClip(AudioClip clip, TempAudioData asset)
-        {
-            if (asset.audioSource == null)
-            {
-                asset.audioSource = previewGameObject.AddComponent<AudioSource>();
-            }
-
-            asset.audioSource.Stop();
-            asset.audioSource.clip = clip;
-            asset.audioSource.volume = 1f; // Ensure volume is set
-            asset.audioSource.mute = false; // Ensure it's not muted
-            asset.audioSource.Play();
-        }
-
-        private float GetPlaybackPosition(AudioSource audioSource)
-        {
-            if (audioSource == null || audioSource.clip == null) return 0f;
-            return audioSource.time / audioSource.clip.length; // Normalize between 0 and 1
+            EditorApplication.update -= repaintCallback;
         }
     }
 }

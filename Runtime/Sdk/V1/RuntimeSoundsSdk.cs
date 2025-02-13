@@ -9,6 +9,7 @@ namespace RuntimeSounds.V1
     {
         private static RuntimeSoundsSettings _developerSettings;
         private static AssetApi _assetApi;
+        private static UserApi _userApi;
 
         private static void Init()
         {
@@ -17,6 +18,21 @@ namespace RuntimeSounds.V1
 
             if (_assetApi == null)
                 _assetApi = new AssetApi(_developerSettings);
+
+            if (_userApi == null)
+                _userApi = new UserApi(_developerSettings);
+        }
+
+        public static async Task<User> VerifyApiKeyAsync(string apiKey, RequestCallbacks callbacks = null)
+        {
+            Init();
+
+            var userResponse = await _userApi.VerifyApiKeyAsync(apiKey, callbacks);
+
+            if (userResponse.IsSuccess)
+                return userResponse.Data;
+
+            return null;
         }
 
         public static async Task<(List<Asset>, Pagination)> ListAssetsAsync(
@@ -47,7 +63,7 @@ namespace RuntimeSounds.V1
         {
             Init();
 
-            return await FileApi.DownloadAudioAsync(url);
+            return await FileApi.DownloadAudioAsync(url, _developerSettings.ApiKey);
         }
     }
 }

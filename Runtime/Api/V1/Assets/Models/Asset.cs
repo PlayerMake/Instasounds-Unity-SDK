@@ -15,7 +15,13 @@ namespace RuntimeSounds.Api
         [JsonProperty("url")]
         public string Url;
 
+        [JsonProperty("previewUrl")]
+        public string PreviewUrl;
+
         [JsonProperty("iconUrl")]
         public string IconUrl;
+
+        [JsonProperty("isPremium")]
+        public bool IsPremium;
     }
 }
