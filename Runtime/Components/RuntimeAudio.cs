@@ -1,7 +1,7 @@
 using RuntimeSounds.Api;
+using RuntimeSounds.V1;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Networking;
 
 public class RuntimeAudio : MonoBehaviour
 {
@@ -14,27 +14,34 @@ public class RuntimeAudio : MonoBehaviour
     void Start()
     {
         if (selectedAsset != null && !string.IsNullOrEmpty(selectedAsset.Url))
-            StartCoroutine(DownloadAndPlayAudio(selectedAsset.Url));
+            StartCoroutine(DownloadAndPlayAudio(selectedAsset.Url, selectedAsset.Id));
     }
 
-    IEnumerator DownloadAndPlayAudio(string url)
+    IEnumerator DownloadAndPlayAudio(string url, string assetId)
     {
-        using (var request = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV))
+        var audioClip = AudioCacheReader.Load(assetId);
+
+        if (audioClip != null)
         {
-            yield return request.SendWebRequest();
+            audioSource.clip = audioClip;
 
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError("Error downloading audio: " + request.error);
-            }
-            else
-            {
-                var clip = DownloadHandlerAudioClip.GetContent(request);
-                audioSource.clip = clip;
+            if (playOnLoad)
+                audioSource.Play();
 
-                if (playOnLoad) 
-                    audioSource.Play();
-            }
+            yield break;
+        }
+
+        var downloadTask = RuntimeSoundsSdk.LoadAudioClipAsync(url);
+
+        while (!downloadTask.IsCompleted)
+            yield return null;
+
+        if (downloadTask.IsCompletedSuccessfully)
+        {
+            audioSource.clip = downloadTask.Result;
+
+            if (playOnLoad)
+                audioSource.Play();
         }
     }
 }

@@ -1,5 +1,6 @@
 using RuntimeSounds.Api;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -57,6 +58,11 @@ namespace RuntimeSounds.V1
             }, callbacks);
 
             return (assetResponse.Data, assetResponse.Pagination);
+        }
+
+        public static async Task<byte[]> DownloadFileIntoMemoryAsync(string url, CancellationToken cancellationToken = default)
+        {
+            return await FileApi.DownloadFileIntoMemoryAsync(url, _developerSettings.ApiKey, cancellationToken);
         }
 
         public static async Task<AudioClip> LoadAudioClipAsync(string url)

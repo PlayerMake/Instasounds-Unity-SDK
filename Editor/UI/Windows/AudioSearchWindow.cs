@@ -320,7 +320,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             if (!tierLoading & !string.IsNullOrEmpty(tier))
             {
-                EditorGUILayout.LabelField("Account Level: " + tier);
+                EditorGUILayout.LabelField("Account Level: " + tier, GUILayout.Width(120));
 
                 EditorGUILayout.BeginVertical(new GUIStyle()
                 {

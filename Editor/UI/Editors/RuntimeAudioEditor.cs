@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System;
 using RuntimeSounds.Editor.UI.Windows;
 using RuntimeSounds.Api;
 using RuntimeSounds.V1;
@@ -141,7 +140,36 @@ public class RuntimeAudioEditor : Editor
         {
             var myTarget = (RuntimeAudio)target;
 
-            AudioSearchWindow.Open(this,myTarget);
+            AudioSearchWindow.Open(this, myTarget);
+        }
+
+        if (!AudioCache.Exists(asset.Id))
+        {
+            if (clipData.caching)
+                GUI.enabled = false;
+
+            if (GUILayout.Button(clipData.caching ? "Caching" : "Cache", GUILayout.Width(64), GUILayout.Height(34)))
+            {
+                clipData.caching = true;
+
+                RuntimeSoundsSdk.DownloadFileIntoMemoryAsync(asset.Url).ContinueWith(async p =>
+                {
+                    clipData.caching = false;
+
+                    if (p.Result == null)
+                        return;
+
+                    await AudioCache.Save(p.Result, asset.Id);
+                });
+            }
+
+            GUI.enabled = true;
+        } else
+        {
+            if (GUILayout.Button("Uncache", GUILayout.Width(64), GUILayout.Height(34)))
+            {
+                AudioCache.Remove(asset.Id);
+            }
         }
 
         EditorGUILayout.EndHorizontal();

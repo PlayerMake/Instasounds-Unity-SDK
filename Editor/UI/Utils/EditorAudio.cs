@@ -10,6 +10,8 @@ public class EditorAudioClip
 
     public bool loading;
 
+    public bool caching;
+
     public EditorApplication.CallbackFunction clipendCallback;
 
     public AudioSource audioSource;
@@ -58,7 +60,16 @@ public static class EditorAudio
 
         EditorGUILayout.BeginHorizontal();
 
-        EditorGUILayout.LabelField(asset.Name, GUILayout.Width(70));
+        var cached = AudioCache.Exists(asset.Id);
+
+        if (cached)
+        {
+            EditorGUILayout.LabelField(asset.Name + "<color=orange> (cached)</color> ", new GUIStyle(EditorStyles.label) { richText = true }, GUILayout.Width(120));
+        }
+        else
+        {
+            EditorGUILayout.LabelField(asset.Name, GUILayout.Width(70));
+        }
         EditorGUILayout.Space();
 
         if (asset.IsPremium)
@@ -106,25 +117,39 @@ public static class EditorAudio
                 {
                     clipData.loading = true;
 
-                    RuntimeSoundsSdk
-                        .LoadAudioClipAsync(usePreview ? asset.PreviewUrl : asset.Url)
-                        .ContinueWith(p =>
-                        {
-                            clipData.loading = false;
+                    if (AudioCache.Exists(asset.Id))
+                    {
+                        var clip = AudioCache.Load(asset.Id);
 
-                            if (p.Result == null)
+                        clipData.loading = false;
+                        clipData.playing = true;
 
+                        updateCallback = () => PlayClipOnMainThread(clip, clipData, previewGameObject, updateCallback);
+
+                        EditorApplication.update += updateCallback;
+                    }
+                    else
+                    {
+                        RuntimeSoundsSdk
+                            .LoadAudioClipAsync(usePreview ? asset.PreviewUrl : asset.Url)
+                            .ContinueWith(p =>
                             {
-                                clipData.playing = false;
-                                return;
-                            }
+                                clipData.loading = false;
 
-                            clipData.playing = true;
+                                if (p.Result == null)
 
-                            updateCallback = () => PlayClipOnMainThread(p.Result, clipData, previewGameObject, updateCallback);
+                                {
+                                    clipData.playing = false;
+                                    return;
+                                }
 
-                            EditorApplication.update += updateCallback;
-                        });
+                                clipData.playing = true;
+
+                                updateCallback = () => PlayClipOnMainThread(p.Result, clipData, previewGameObject, updateCallback);
+
+                                EditorApplication.update += updateCallback;
+                            });
+                    }
                 }
             }
         }
