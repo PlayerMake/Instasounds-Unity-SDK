@@ -113,7 +113,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
                 if (GUILayout.Button("Get API Key", GUILayout.ExpandWidth(true)))
                 {
-                    Application.OpenURL("https://runtimesounds.com/api-keys");
+                    Application.OpenURL("https://runtimesounds.com/generate-api-key");
                 }
 
                 EditorGUILayout.BeginVertical(new GUIStyle()
