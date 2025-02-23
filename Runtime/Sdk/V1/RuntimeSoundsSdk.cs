@@ -36,9 +36,29 @@ namespace RuntimeSounds.V1
             return null;
         }
 
+        public static async Task<Asset> ImportAssetAsync(
+            string source,
+            string id,
+             RequestCallbacks callbacks = null
+            )
+        {
+            var importResponse = await _assetApi.ImportAssetAsync(new AssetImportRequest()
+            {
+                Body = new AssetImportBody()
+                {
+                    Source = source,
+                    SourceId = id,
+                }
+            }, callbacks);
+
+            return importResponse.Data;
+        }
+
         public static async Task<(List<Asset>, Pagination)> ListAssetsAsync(
             string searchTerm = "",
             string selectedSort = "",
+            string selectedTier = "",
+            string selectedSource = "",
             int limit = 10,
             int skip = 0,
             RequestCallbacks callbacks = null
@@ -52,6 +72,8 @@ namespace RuntimeSounds.V1
                 {
                     Sort = selectedSort,
                     Search = searchTerm,
+                    Tier = selectedTier,
+                    Source = selectedSource,
                     Limit = limit,
                     Skip = skip
                 }

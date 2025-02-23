@@ -10,6 +10,8 @@ public class EditorAudioClip
 
     public bool loading;
 
+    public bool importing;
+
     public bool caching;
 
     public EditorApplication.CallbackFunction clipendCallback;
@@ -46,7 +48,7 @@ public static class EditorAudio
 
         Rect waveformRect = GUILayoutUtility.GetRect(100, 10, new GUIStyle()
         {
-            margin = new RectOffset(0, 0, 7, 0)
+            margin = new RectOffset(4, 0, 7, 0)
         });
         GUI.DrawTexture(waveformRect, new Texture2D(200, 10));
 
@@ -62,19 +64,37 @@ public static class EditorAudio
 
         var cached = AudioCache.Exists(asset.Id);
 
-        if (cached)
-        {
-            EditorGUILayout.LabelField(asset.Name + "<color=orange> (cached)</color> ", new GUIStyle(EditorStyles.label) { richText = true }, GUILayout.Width(120));
-        }
-        else
-        {
-            EditorGUILayout.LabelField(asset.Name, GUILayout.Width(70));
-        }
+            if (!asset.AiGenerated)
+            {
+                if (cached)
+                {
+                EditorGUILayout.LabelField(asset.Name + "<color=orange> (cached)</color>", new GUIStyle(EditorStyles.label)
+                {
+                    richText = true,
+                }, GUILayout.Width(170));
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(asset.Name, GUILayout.Width(170));
+                }
+            }
+            else
+            {
+                if (cached)
+                {
+                    EditorGUILayout.LabelField(asset.Name + "<color=cyan> (AI)</color><color=orange> (cached)</color>", new GUIStyle(EditorStyles.label) { richText = true }, GUILayout.Width(170));
+                }
+                else
+                {
+                    EditorGUILayout.LabelField(asset.Name + "<color=cyan> (AI)</color>", new GUIStyle(EditorStyles.label) { richText = true }, GUILayout.Width(170));
+                }
+            }
+       
         EditorGUILayout.Space();
 
         if (asset.IsPremium)
         {
-            EditorGUILayout.LabelField("<color=orange>(BASIC TIER)</color> " + FormatTime(clipData.currentTime), new GUIStyle(EditorStyles.label) { richText = true, alignment = TextAnchor.MiddleRight }, GUILayout.Width(133));
+            EditorGUILayout.LabelField("<color=orange>(BASIC TIER)</color> " + FormatTime(clipData.currentTime), new GUIStyle(EditorStyles.label) { richText = true, alignment = TextAnchor.MiddleRight }, GUILayout.Width(57));
         } else
         {
             EditorGUILayout.LabelField(FormatTime(clipData.currentTime), new GUIStyle(EditorStyles.label)
@@ -86,6 +106,16 @@ public static class EditorAudio
 
         EditorGUILayout.EndVertical();
 
+        GUI.enabled = true;
+    }
+
+    public static void DrawPlayButton(
+        Asset asset,
+        EditorAudioClip clipData,
+        GameObject previewGameObject,
+        EditorApplication.CallbackFunction updateCallback,
+        bool usePreview = false)
+    {
         if (clipData.loading)
         {
             GUI.enabled = false;
@@ -97,9 +127,9 @@ public static class EditorAudio
             GUI.enabled = true;
         }
 
-        if (!clipData.loading)
+        if (!clipData.loading && !string.IsNullOrEmpty(asset.Id))
         {
-            if (!usePreview && String.IsNullOrEmpty(asset.Url))
+            if (String.IsNullOrEmpty(asset.Url))
                 GUI.enabled = false;
 
             if (GUILayout.Button(clipData.playing ? "Stop" : (usePreview ? "▶ Preview" : "▶ Play"), GUILayout.Width(usePreview ? 74 : 60), GUILayout.Height(34)))
@@ -131,7 +161,7 @@ public static class EditorAudio
                     else
                     {
                         RuntimeSoundsSdk
-                            .LoadAudioClipAsync(usePreview ? asset.PreviewUrl : asset.Url)
+                            .LoadAudioClipAsync(usePreview ? asset.Url : asset.Url)
                             .ContinueWith(p =>
                             {
                                 clipData.loading = false;
@@ -153,9 +183,6 @@ public static class EditorAudio
                 }
             }
         }
-
-        GUI.enabled = true;
-
     }
 
     public static float GetPlaybackPosition(AudioSource audioSource)

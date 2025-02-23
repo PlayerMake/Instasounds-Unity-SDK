@@ -12,7 +12,13 @@ namespace RuntimeSounds.Api
         [JsonProperty("search")]
         public string Search { get; set; }
 
+        [JsonProperty("tier")]
+        public string Tier { get; set; }
+
         [JsonProperty("sort")]
         public string Sort { get; set; }
+
+        [JsonProperty("source")]
+        public string Source { get; set; }
     }
 }

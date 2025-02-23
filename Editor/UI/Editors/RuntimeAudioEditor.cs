@@ -51,10 +51,17 @@ public class RuntimeAudioEditor : Editor
             EditorApplication.update += repaintCallback;
         }
 
+        EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Audio Clip", new GUIStyle(EditorStyles.label)
         {
-            fontStyle = FontStyle.Normal
-        });
+            fontStyle = FontStyle.Bold,
+            normal = new GUIStyleState()
+            {
+                textColor = Color.white,
+            }
+        }, GUILayout.Width(66));
+
+        EditorGUILayout.EndHorizontal();
 
         if (myTarget.selectedAsset != null && !string.IsNullOrEmpty(myTarget.selectedAsset.Url))
         {
@@ -64,7 +71,7 @@ public class RuntimeAudioEditor : Editor
         {
             EditorGUILayout.BeginVertical(new GUIStyle()
             {
-                margin = new RectOffset(0, 0, 0, 10)
+                margin = new RectOffset(0, 0, 0, 6)
             });
 
             EditorGUILayout.BeginHorizontal();
@@ -132,9 +139,18 @@ public class RuntimeAudioEditor : Editor
             margin = new RectOffset(0, 0, 0, 10)
         });
 
-        EditorGUILayout.BeginHorizontal();
-
         EditorAudio.DrawAudioClip(asset, clipData, previewGameObject, updateCallback);
+
+        EditorGUILayout.BeginVertical(new GUIStyle()
+        {
+            margin = new RectOffset(0, 0, 0, 8)
+        });
+
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+
+        EditorAudio.DrawPlayButton(asset, clipData, previewGameObject, updateCallback, true);
 
         if (GUILayout.Button("Change", GUILayout.Width(60), GUILayout.Height(34)))
         {
@@ -171,6 +187,7 @@ public class RuntimeAudioEditor : Editor
                 AudioCache.Remove(asset.Id);
             }
         }
+
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.EndVertical();

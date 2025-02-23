@@ -5,6 +5,7 @@ using RuntimeSounds.V1;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,7 +15,10 @@ namespace RuntimeSounds.Editor.UI.Windows
     {
         RuntimeSoundsSettings settings;
 
-        private static readonly int pageSize = 10;
+        private static readonly int authedPageSize = 7;
+        private static readonly int unauthedPageSize = 5;
+        private static int pageSize;
+
         private static readonly Option[] sortOptions =
             new List<Option>() {
                 new Option()
@@ -34,11 +38,46 @@ namespace RuntimeSounds.Editor.UI.Windows
                 } }
         .ToArray();
 
+        private static readonly Option[] tierOptions = 
+            new List<Option>() {
+                new Option()
+                {
+                    Label = "All",
+                    Value = null
+                },
+                new Option()
+                {
+                    Label = "Free",
+                    Value = "free"
+                },
+                new Option()
+                {
+                    Label = "Basic",
+                    Value = "basic"
+                } }
+        .ToArray();
+
+        private static readonly Option[] sourceOptions =
+            new List<Option>() {
+                new Option()
+                {
+                    Label = "Runtime Sounds",
+                    Value = null
+                },
+                new Option()
+                {
+                    Label = "Freesound",
+                    Value = "freesound"
+                } }
+        .ToArray();
+
         private static RuntimeAudio _component;
         private static RuntimeAudioEditor _editorComponent;
 
         private static string searchQuery = "";
         private static string selectedSort = "relevance";
+        private static string selectedTier = null;
+        private static string selectedSource = null;
 
         private Debouncer debouncer;
 
@@ -52,6 +91,9 @@ namespace RuntimeSounds.Editor.UI.Windows
         private GameObject previewGameObject;
 
         private SelectInput sortSelectInput;
+        private SelectInput tierSelectInput;
+        private SelectInput sourceSelectInput;
+
         private LoadingIndicator loadingIndicator;
 
         private EditorApplication.CallbackFunction updateCallback;
@@ -101,6 +143,18 @@ namespace RuntimeSounds.Editor.UI.Windows
                 sortSelectInput.Init(sortOptions, selectedSort);
             }
 
+            if (tierSelectInput == null)
+            {
+                tierSelectInput = new SelectInput();
+                tierSelectInput.Init(tierOptions, selectedTier);
+            }
+
+            if (sourceSelectInput == null)
+            {
+                sourceSelectInput = new SelectInput();
+                sourceSelectInput.Init(sourceOptions, selectedSource);
+            }
+
             if (loadingIndicator == null)
             {
                 loadingIndicator = new LoadingIndicator();
@@ -128,13 +182,26 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             try
             {
+                var threadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+
                 RuntimeSoundsSdk
                     .VerifyApiKeyAsync(settings.ApiKey)
                     .ContinueWith(p =>
                     {
                         tier = p?.Result?.Tier;
                         tierLoading = false;
-                    });
+
+                        if (string.IsNullOrEmpty(tier))
+                        {
+                            pageSize = unauthedPageSize;
+                        }
+                        else
+                        {
+                            pageSize = authedPageSize;
+                        }
+
+                        LoadItems(currentPage);
+                    }, threadScheduler);
             }
             catch
             {
@@ -157,7 +224,12 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             try
             {
-                RuntimeSoundsSdk.ListAssetsAsync(searchQuery, selectedSort, pageSize, (page - 1) * pageSize)
+                RuntimeSoundsSdk.ListAssetsAsync(
+                    searchQuery,
+                    selectedSort,
+                    selectedTier,
+                    selectedSource,
+                    pageSize, (page - 1) * pageSize)
                     .ContinueWith(p =>
                     {
                         try
@@ -193,10 +265,8 @@ namespace RuntimeSounds.Editor.UI.Windows
 
         public static void Open(RuntimeAudioEditor editorComponent, RuntimeAudio component)
         {
-            LoadItems(currentPage);
-
             var window = GetWindow<AudioSearchWindow>("Audio Picker");
-            window.minSize = new Vector2(380, 300);
+            window.minSize = new Vector2(490, 490);
 
             _component = component;
             _editorComponent = editorComponent;
@@ -311,16 +381,56 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             EditorGUILayout.BeginVertical(new GUIStyle()
             {
-                margin = new RectOffset(0, 0, 10, 0)
+                margin = new RectOffset(0, 0, 6, 0)
             });
 
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.BeginHorizontal();
 
+            EditorGUILayout.LabelField("Source", GUILayout.Width(50));
+
+            sourceSelectInput.Render((source) =>
+            {
+                selectedSource = source;
+                LoadItems(0);
+
+            }, GUILayout.ExpandWidth(true));
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginVertical(new GUIStyle()
+            {
+                margin = new RectOffset(0, 0, 6, 0)
+            });
+
+            EditorGUILayout.EndVertical();
+
+            /* EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField("Tier", GUILayout.Width(50));
+
+            tierSelectInput.Render((tier) =>
+            {
+                selectedTier = tier;
+                LoadItems(0);
+
+            }, GUILayout.ExpandWidth(true));
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginVertical(new GUIStyle()
+            {
+                margin = new RectOffset(0, 0, 10, 0)
+            });
+
+            EditorGUILayout.EndVertical(); */
+
+            EditorGUILayout.BeginHorizontal();
+
             if (!tierLoading & !string.IsNullOrEmpty(tier))
             {
-                EditorGUILayout.LabelField("Account Level: " + tier, GUILayout.Width(120));
+                EditorGUILayout.LabelField("Account Level: " + tier, GUILayout.Width(180));
 
                 EditorGUILayout.BeginVertical(new GUIStyle()
                 {
@@ -409,6 +519,7 @@ namespace RuntimeSounds.Editor.UI.Windows
             EditorGUILayout.BeginHorizontal();
 
             EditorAudio.DrawAudioClip(asset, clipData, previewGameObject, updateCallback, true);
+            EditorAudio.DrawPlayButton(asset, clipData, previewGameObject, updateCallback, true);
 
             if (!string.IsNullOrEmpty(asset.Url) && !(asset.IsPremium && tier == "Free Tier"))
             {
@@ -424,7 +535,44 @@ namespace RuntimeSounds.Editor.UI.Windows
                 }
             }
 
-            if (string.IsNullOrEmpty(asset.Url) || (asset.IsPremium && tier == "Free Tier"))
+            if (string.IsNullOrEmpty(asset.Url) && !string.IsNullOrEmpty(asset.ExternalId) && !(asset.IsPremium && tier == "Free Tier"))
+            {
+                if (clipData.importing)
+                    GUI.enabled = false;
+
+                if (GUILayout.Button(clipData.importing ? "Importing" : "Import", GUILayout.Width(138), GUILayout.Height(34)))
+                {
+                    clipData.importing = true;
+
+                    RuntimeSoundsSdk.ImportAssetAsync(selectedSource, asset.ExternalId).ContinueWith(p =>
+                    {
+                        try
+                        {
+                            clipData.importing = false;
+
+                            if (p.IsFaulted || p.Result == null)
+                            {
+                                Debug.LogError("Failed to import sound.");
+                                return;
+                            }
+
+                            asset.Id = p.Result.Id;
+                            asset.Url = p.Result.Url;
+                            asset.PreviewUrl = p.Result.PreviewUrl;
+                        }
+                        catch (Exception)
+                        {
+                            Debug.LogError("Failed to import sound.");
+                            return;
+                        }
+                    });
+                }
+
+                GUI.enabled = true;
+            }
+
+            if ((string.IsNullOrEmpty(asset.Url) && string.IsNullOrEmpty(asset.ExternalId))
+                || (asset.IsPremium && tier == "Free Tier"))
             {
                 GUI.enabled = false;
                 if (GUILayout.Button("Locked", GUILayout.Width(60), GUILayout.Height(34)))

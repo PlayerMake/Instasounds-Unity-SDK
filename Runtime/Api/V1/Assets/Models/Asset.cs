@@ -9,8 +9,14 @@ namespace RuntimeSounds.Api
         [JsonProperty("_id")]
         public string Id;
 
+        [JsonProperty("externalId")]
+        public string ExternalId;
+
         [JsonProperty("name")]
         public string Name;
+
+        [JsonProperty("aiGenerated")]
+        public bool AiGenerated;
 
         [JsonProperty("url")]
         public string Url;
