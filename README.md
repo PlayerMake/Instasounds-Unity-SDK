@@ -21,7 +21,7 @@
 
 ## Contributing
 
-We welcome contributions! Feel free to submit issues, feature requests, or pull requests via [GitHub](https://github.com/your-repo/RuntimeSounds/issues).
+We welcome contributions! Feel free to submit issues, feature requests, or pull requests via [GitHub](https://github.com/PlayerMake/RuntimeSounds-Unity-SDK/issues).
 
 ## Contact & Support
 
