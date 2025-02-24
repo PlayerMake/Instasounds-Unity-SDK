@@ -12,7 +12,7 @@
 
 ## Installation
 
-1. **Download the Unity Package** from [GitHub Releases](https://github.com/PlayerMake/RuntimeSounds-Unity-SDK/releases) or the Unity Asset Store.
+1. **Download the Unity Package** from [GitHub Releases](https://github.com/PlayerMake/Runtime-Sounds-Unity-SDK/releases) or the Unity Asset Store.
 2. **Import the package** into your Unity project.
 3. **Generate an API key** by going through the API key flow in Tools -> Runtime Sounds.
 4. **Add the Runtime Audio component** to your GameObject.
@@ -21,7 +21,7 @@
 
 ## Contributing
 
-We welcome contributions! Feel free to submit issues, feature requests, or pull requests via [GitHub](https://github.com/PlayerMake/RuntimeSounds-Unity-SDK/issues).
+We welcome contributions! Feel free to submit issues, feature requests, or pull requests via [GitHub](https://github.com/PlayerMake/Runtime-Sounds-Unity-SDK/issues).
 
 ## Contact & Support
 
