@@ -360,7 +360,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
                 EditorGUILayout.EndVertical();
 
-                EditorGUILayout.LabelField($"You can still browse the sound library below, but you need to set your API Key in Tools -> Runtime Sounds before you can play, create, or use them.", new GUIStyle(EditorStyles.label)
+                EditorGUILayout.LabelField($"You can still browse the sound library below, but you need to set your API Key in Tools -> Runtime Sounds -> Account before you can play, create, or use them.", new GUIStyle(EditorStyles.label)
                 {
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = true,

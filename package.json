@@ -1,18 +1,24 @@
 {
   "name": "com.runtimesounds.sdk",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "displayName": "Runtime Sounds SDK",
   "description": "The official Runtime Sounds SDK. Easy to setup, and built to power real time audio in games.",
   "unity": "2021.3",
   "author": {
     "name": "Runtime Sounds",
-    "email": "info@runtimesounds.com",
+    "email": "runtimesounds@gmail.com",
     "url": "https://runtimesounds.com"
   },
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.0.2"
   },
-  "samples": [],
+  "samples": [
+    {
+      "displayName": "Runtime Audio Sample",
+      "description": "A sample scene with a Runtime Sounds Audio component set up to play on load.",
+      "path": "Samples~/RuntimeAudioSample"
+    }
+  ],
   "keywords": [
     "runtime",
     "runtime sounds",

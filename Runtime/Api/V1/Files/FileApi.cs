@@ -35,11 +35,11 @@ namespace RuntimeSounds.Api
             {
                 if (webRequest.responseCode == 402)
                 {
-                    Debug.LogError("You have hit the limit on your account. Please go to https://runtimesounds.com/ to upgrade, if you are getting value from our plugin and want to include more audio in your game.");
+                    Debug.LogWarning("You have hit the limit on your account. Please go to https://runtimesounds.com/ to upgrade, if you are getting value from our plugin and want to include more audio in your game.");
                 }
                 else
                 {
-                    Debug.LogError("Unexpected error downloading audio: " + webRequest.error);
+                    Debug.LogWarning("Error downloading audio. Please ensure your API Key is set in Tools -> Runtime Sounds -> Account");
                 }
                 return null;
             }
