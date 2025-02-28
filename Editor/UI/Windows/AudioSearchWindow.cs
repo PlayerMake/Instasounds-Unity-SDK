@@ -68,7 +68,13 @@ namespace RuntimeSounds.Editor.UI.Windows
                 {
                     Label = "Freesound",
                     Value = "freesound"
-                } }
+                },
+                new Option()
+                {
+                    Label = "My sounds",
+                    Value = "my-sounds"
+                }
+            }
         .ToArray();
 
         private static RuntimeAudio _component;
@@ -92,7 +98,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
         private SelectInput sortSelectInput;
         private SelectInput tierSelectInput;
-        private SelectInput sourceSelectInput;
+        private static SelectInput sourceSelectInput;
 
         private LoadingIndicator loadingIndicator;
 
@@ -113,6 +119,15 @@ namespace RuntimeSounds.Editor.UI.Windows
         private static List<DownloadedData> foundClips = new List<DownloadedData>();
 
         private string apiKey;
+
+        [MenuItem("Tools/Runtime Sounds/Browse Audio", false, 0)]
+        public static void Generate()
+        {
+            _component = null;
+            _editorComponent = null;
+            var window = GetWindow<AudioSearchWindow>("Browse Audio");
+            window.minSize = new Vector2(490, 500);
+        }
 
         void OnEnable()
         {
@@ -263,10 +278,23 @@ namespace RuntimeSounds.Editor.UI.Windows
             }
         }
 
+        public static void Open(string defaultSource) 
+        {
+            var window = GetWindow<AudioSearchWindow>("Audio Search");
+            window.minSize = new Vector2(490, 500);
+
+            selectedSource = defaultSource;
+
+            sourceSelectInput = new SelectInput();
+            sourceSelectInput.Init(sourceOptions, selectedSource);
+
+            LoadItems(0);
+        }
+
         public static void Open(RuntimeAudioEditor editorComponent, RuntimeAudio component)
         {
             var window = GetWindow<AudioSearchWindow>("Audio Picker");
-            window.minSize = new Vector2(490, 490);
+            window.minSize = new Vector2(490, 500);
 
             _component = component;
             _editorComponent = editorComponent;
@@ -307,7 +335,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             if (!tierLoading & string.IsNullOrEmpty(tier))
             {
-                EditorGUILayout.LabelField($"To start using Runtime Sounds, you first need to setup your account. You can do so below.", new GUIStyle(EditorStyles.label)
+                EditorGUILayout.LabelField($"To start using Runtime Sounds, you first need to setup your account.", new GUIStyle(EditorStyles.label)
                 {
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = true,
@@ -332,7 +360,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
                 EditorGUILayout.EndVertical();
 
-                EditorGUILayout.LabelField($"You can still browse the sound library and preview sounds below, but you won't be able to use them until you set your API Key in Tools -> Runtime Sounds.", new GUIStyle(EditorStyles.label)
+                EditorGUILayout.LabelField($"You can still browse the sound library below, but you need to set your API Key in Tools -> Runtime Sounds before you can play, create, or use them.", new GUIStyle(EditorStyles.label)
                 {
                     alignment = TextAnchor.MiddleCenter,
                     wordWrap = true,
@@ -463,6 +491,27 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             EditorGUILayout.EndVertical();
 
+            if (selectedSource == "my-sounds" && !loading && totalItems == 0)
+            {
+                EditorGUILayout.LabelField("You haven't generated any sounds yet!", new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    wordWrap = true,
+                });
+
+                EditorGUILayout.BeginVertical(new GUIStyle()
+                {
+                    margin = new RectOffset(0, 0, 6, 0)
+                });
+
+                EditorGUILayout.EndVertical();
+
+                if (GUILayout.Button("Generate a Sound", GUILayout.Height(34)))
+                {
+                    GenerateAudioWindow.Open();
+                }
+            }
+
             foreach (var clip in foundClips)
             {
                 RenderAudioClip(clip.Asset, clip.SceneData);
@@ -521,7 +570,7 @@ namespace RuntimeSounds.Editor.UI.Windows
             EditorAudio.DrawAudioClip(asset, clipData, previewGameObject, updateCallback, true);
             EditorAudio.DrawPlayButton(asset, clipData, previewGameObject, updateCallback, true);
 
-            if (!string.IsNullOrEmpty(asset.Url) && !(asset.IsPremium && tier == "Free Tier"))
+            if (!string.IsNullOrEmpty(tier) && !(asset.IsPremium && tier == "Free Tier") && _component?.selectedAsset != null)
             {
                 if (GUILayout.Button("Select", GUILayout.Width(60), GUILayout.Height(34)))
                 {
@@ -535,9 +584,12 @@ namespace RuntimeSounds.Editor.UI.Windows
                 }
             }
 
-            if (string.IsNullOrEmpty(asset.Url) && !string.IsNullOrEmpty(asset.ExternalId) && !(asset.IsPremium && tier == "Free Tier"))
+            if (string.IsNullOrEmpty(asset.Id) && !string.IsNullOrEmpty(asset.ExternalId) && !(asset.IsPremium && tier == "Free Tier"))
             {
                 if (clipData.importing)
+                    GUI.enabled = false;
+
+                if (String.IsNullOrEmpty(tier))
                     GUI.enabled = false;
 
                 if (GUILayout.Button(clipData.importing ? "Importing" : "Import", GUILayout.Width(138), GUILayout.Height(34)))
@@ -571,8 +623,7 @@ namespace RuntimeSounds.Editor.UI.Windows
                 GUI.enabled = true;
             }
 
-            if ((string.IsNullOrEmpty(asset.Url) && string.IsNullOrEmpty(asset.ExternalId))
-                || (asset.IsPremium && tier == "Free Tier"))
+            if ((string.IsNullOrEmpty(tier) || (asset.IsPremium && tier == "Free Tier")) && !string.IsNullOrEmpty(asset.Id))
             {
                 GUI.enabled = false;
                 if (GUILayout.Button("Locked", GUILayout.Width(60), GUILayout.Height(34)))

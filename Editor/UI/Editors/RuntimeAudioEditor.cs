@@ -13,7 +13,6 @@ public class RuntimeAudioEditor : Editor
 
     private EditorApplication.CallbackFunction updateCallback;
     private EditorApplication.CallbackFunction repaintCallback;
-
     private double nextRepaintTime = 0;
 
     void OnEnable()
@@ -187,7 +186,6 @@ public class RuntimeAudioEditor : Editor
                 AudioCache.Remove(asset.Id);
             }
         }
-
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.EndVertical();

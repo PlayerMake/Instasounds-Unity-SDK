@@ -36,10 +36,42 @@ namespace RuntimeSounds.V1
             return null;
         }
 
+        public static async Task<UserQuota> GetQuotaAsync(string apiKey, RequestCallbacks callbacks = null)
+        {
+            Init();
+
+            var quotaResponse = await _userApi.GetQuoataAsync(apiKey, callbacks);
+
+            if (quotaResponse.IsSuccess)
+                return quotaResponse.Data;
+
+            return null;
+        }
+
+        public static async Task<Asset> GenerateAssetAsync(
+            string description,
+            string name,
+            int duration,
+            RequestCallbacks callbacks = null
+            )
+        {
+            var generationResponse = await _assetApi.GenerateAssetAsync(new AssetGenerationRequest()
+            {
+                Body = new AssetGenerationBody()
+                {
+                    Duration = duration,
+                    Prompt = description,
+                    Name = name
+                }
+            }, callbacks);
+
+            return generationResponse.Data;
+        }
+
         public static async Task<Asset> ImportAssetAsync(
             string source,
             string id,
-             RequestCallbacks callbacks = null
+            RequestCallbacks callbacks = null
             )
         {
             var importResponse = await _assetApi.ImportAssetAsync(new AssetImportRequest()

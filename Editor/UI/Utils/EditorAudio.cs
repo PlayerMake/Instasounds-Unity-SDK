@@ -114,13 +114,15 @@ public static class EditorAudio
         EditorAudioClip clipData,
         GameObject previewGameObject,
         EditorApplication.CallbackFunction updateCallback,
-        bool usePreview = false)
+        bool usePreview = false,
+        bool expandWidth = false
+        )
     {
         if (clipData.loading)
         {
             GUI.enabled = false;
 
-            if (GUILayout.Button("Loading", GUILayout.Width(usePreview ? 74 : 60), GUILayout.Height(34)))
+            if (GUILayout.Button("Loading", expandWidth ? GUILayout.ExpandWidth(true) : GUILayout.Width(usePreview ? 74 : 60), GUILayout.Height(34)))
             {
             }
 
@@ -132,7 +134,7 @@ public static class EditorAudio
             if (String.IsNullOrEmpty(asset.Url))
                 GUI.enabled = false;
 
-            if (GUILayout.Button(clipData.playing ? "Stop" : (usePreview ? "▶ Preview" : "▶ Play"), GUILayout.Width(usePreview ? 74 : 60), GUILayout.Height(34)))
+            if (GUILayout.Button(clipData.playing ? "Stop" : (usePreview ? "▶ Preview" : "▶ Play"), expandWidth ? GUILayout.ExpandWidth(true) : GUILayout.Width(usePreview ? 74 : 60), GUILayout.Height(34)))
             {
                 if (clipData.playing)
                 {

@@ -29,6 +29,21 @@ namespace RuntimeSounds.Api
             });
         }
 
+        public virtual async Task<AssetGenerationResponse> GenerateAssetAsync(AssetGenerationRequest request, RequestCallbacks callbacks = null)
+        {
+            return await PostAsync<AssetGenerationResponse, AssetGenerationBody>(new RequestWithBody<AssetGenerationBody>()
+            {
+                Url = $"{_settings.ApiBaseUrl}/v1/{Resource}/generate",
+                Payload = request.Body,
+                Callbacks = callbacks,
+                Headers = new Dictionary<string, string>()
+                {
+                    { "x-api-key", _settings.ApiKey },
+                    { "Content-Type", "application/json" }
+                }
+            });
+        }
+
         public virtual async Task<AssetImportResponse> ImportAssetAsync(AssetImportRequest request, RequestCallbacks callbacks = null)
         {
             return await PostAsync<AssetImportResponse, AssetImportBody>(new RequestWithBody<AssetImportBody>()

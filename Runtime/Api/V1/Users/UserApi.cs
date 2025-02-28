@@ -15,6 +15,19 @@ namespace RuntimeSounds.Api
             _settings = settings;
         }
 
+        public virtual async Task<UserQuotaResponse> GetQuoataAsync(string apiKey, RequestCallbacks callbacks = null)
+        {
+            return await GetAsync<UserQuotaResponse>(new Request()
+            {
+                Url = $"{_settings.ApiBaseUrl}/v1/assets/quota",
+                Callbacks = callbacks,
+                Headers = new Dictionary<string, string>()
+                {
+                    { "x-api-key", apiKey }
+                }
+            });
+        }
+
         public virtual async Task<UserGetResponse> VerifyApiKeyAsync(string apiKey, RequestCallbacks callbacks = null)
         {
             return await GetAsync<UserGetResponse>(new Request()

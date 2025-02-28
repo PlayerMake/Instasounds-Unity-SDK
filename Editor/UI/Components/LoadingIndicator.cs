@@ -8,7 +8,7 @@ namespace RuntimeSounds.Editor.UI.Components
         private int currentFrame = 0;
         private int maxFrame = 3;
 
-        private float updateInterval = 0.3f;
+        private float updateInterval = 0.2f;
         private float lastUpdateTime = 0f;
 
         public LoadingIndicator()
@@ -31,27 +31,32 @@ namespace RuntimeSounds.Editor.UI.Components
             currentFrame = (currentFrame + 1) % (maxFrame + 1);
         }
 
-        public void Render(GUIStyle style, params GUILayoutOption[] layoutOptions)
+        public void Render(string text, GUIStyle style, params GUILayoutOption[] layoutOptions)
         {
             if (currentFrame == 0)
             {
-                EditorGUILayout.LabelField("loading", style, layoutOptions);
+                EditorGUILayout.LabelField(text, style, layoutOptions);
             }
 
             if (currentFrame == 1)
             {
-                EditorGUILayout.LabelField("loading.", style, layoutOptions);
+                EditorGUILayout.LabelField($"{text}.", style, layoutOptions);
             }
 
             if (currentFrame == 2)
             {
-                EditorGUILayout.LabelField("loading..", style, layoutOptions);
+                EditorGUILayout.LabelField($"{text}..", style, layoutOptions);
             }
 
             if (currentFrame == 3)
             {
-                EditorGUILayout.LabelField("loading...", style, layoutOptions);
+                EditorGUILayout.LabelField($"{text}...", style, layoutOptions);
             }
+        }
+
+        public void Render(GUIStyle style, params GUILayoutOption[] layoutOptions)
+        {
+            Render("loading", style, layoutOptions);
         }
     }
 }

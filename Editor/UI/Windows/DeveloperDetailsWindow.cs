@@ -1,7 +1,6 @@
 using RuntimeSounds.Api;
 using RuntimeSounds.Editor.UI.Components;
 using RuntimeSounds.Editor.Utils;
-using RuntimeSounds.V1;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,17 +9,15 @@ namespace RuntimeSounds.Editor.UI.Windows
     public class DeveloperDetailsWindow : EditorWindow
     {
         RuntimeSoundsSettings settings;
+
         private Debouncer debouncer;
         private LoadingIndicator loadingIndicator;
 
-        private bool apiKeyValid = false;
-        private bool apiKeyValidationLoading = false;
-
-        [MenuItem("Tools/Runtime Sounds", false, 0)]
+        [MenuItem("Tools/Runtime Sounds/Account", false, 1)]
         public static void Generate()
         {
             var window = GetWindow<DeveloperDetailsWindow>("Runtime Sounds");
-            window.minSize = new Vector2(700, 240);
+            window.minSize = new Vector2(400, 240);
         }
 
         private void OnEnable()
@@ -41,7 +38,9 @@ namespace RuntimeSounds.Editor.UI.Windows
                 AssetDatabase.Refresh();
             }
 
-            VerifyApiKey(settings.ApiKey);
+            UserVerification.GetQuota(settings.ApiKey);
+            UserVerification.VerifyApiKey(settings, settings.ApiKey);
+
         }
         public static void Open()
         {
@@ -124,7 +123,7 @@ namespace RuntimeSounds.Editor.UI.Windows
                 EditorGUILayout.EndVertical();
             }
 
-            GUILayout.Label("Project Settings", new GUIStyle()
+            EditorGUILayout.LabelField("Project Settings", new GUIStyle()
             {
                 fontStyle = FontStyle.Bold,
                 normal = new GUIStyleState()
@@ -136,7 +135,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             var newApiKey = EditorGUILayout.TextField("API Key", settings.ApiKey);
 
-            if (!apiKeyValid && !apiKeyValidationLoading && !string.IsNullOrEmpty(settings.ApiKey))
+            if (!UserVerification.apiKeyValid && !UserVerification.apiKeyValidationLoading && !string.IsNullOrEmpty(settings.ApiKey))
             {
                 EditorGUILayout.LabelField("API Key is invalid.", new GUIStyle(EditorStyles.label)
                 {
@@ -147,7 +146,7 @@ namespace RuntimeSounds.Editor.UI.Windows
                 });
             }
 
-            if (apiKeyValid && !apiKeyValidationLoading && !string.IsNullOrEmpty(settings.ApiKey))
+            if (UserVerification.apiKeyValid && !UserVerification.apiKeyValidationLoading && !string.IsNullOrEmpty(settings.ApiKey))
             {
                 EditorGUILayout.LabelField("API Key is valid.", new GUIStyle(EditorStyles.label)
                 {
@@ -158,7 +157,7 @@ namespace RuntimeSounds.Editor.UI.Windows
                 });
             }
 
-            if (apiKeyValidationLoading)
+            if (UserVerification.apiKeyValidationLoading)
             {
                 loadingIndicator.Render(new GUIStyle(GUI.skin.label)
                 {
@@ -168,50 +167,67 @@ namespace RuntimeSounds.Editor.UI.Windows
 
             if (newApiKey != settings.ApiKey)
             {
-                debouncer.Execute(() => VerifyApiKey(newApiKey));
+                debouncer.Execute(() => {
+                    UserVerification.VerifyApiKey(settings, newApiKey);
+                    UserVerification.GetQuota(newApiKey);
+                });
             }
+
+            EditorGUILayout.BeginVertical(new GUIStyle()
+            {
+                margin = new RectOffset(10, 10, 10, 0)
+            });
 
             EditorGUILayout.EndVertical();
-        }
 
-        private void VerifyApiKey(string apiKey)
-        {
-            apiKeyValidationLoading = true;
-            settings.ApiKey = apiKey;
-            EditorUtility.SetDirty(settings);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
 
-            if (string.IsNullOrEmpty(apiKey))
+            EditorGUILayout.LabelField("Account Stats", new GUIStyle()
             {
-                apiKeyValidationLoading = false;
-                return;
-            }
+                fontStyle = FontStyle.Bold,
+                normal = new GUIStyleState()
+                {
+                    textColor = Color.white
+                },
+                margin = new RectOffset(5, 0, 10, 0),
+            });
 
-            try
+            var requestPercentageUsage = UserVerification.quota?.DownloadQuota == null || UserVerification.quota?.DownloadQuota == 0 ? 1 : (UserVerification.quota.RequestCount / UserVerification.quota.DownloadQuota);
+            var generationPercentageUsage = UserVerification.quota?.GenerationQuota == null || UserVerification.quota?.GenerationQuota == 0 ? 1 : (UserVerification.quota.GenerationCount / UserVerification.quota.GenerationQuota);
+
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField("Audio clip downloads in the last 30 days: ", GUILayout.Width(250));
+
+            if (!UserVerification.quotaLoading)
             {
-                RuntimeSoundsSdk
-                    .VerifyApiKeyAsync(apiKey)
-                    .ContinueWith(p =>
+                EditorGUILayout.LabelField((UserVerification.quota?.RequestCount ?? 0) + "/" + (UserVerification.quota?.DownloadQuota ?? 0), new GUIStyle(EditorStyles.label)
+                {
+                    normal = new GUIStyleState()
                     {
-                        apiKeyValidationLoading = false;
-
-                        if (p.Result == null)
-                        {
-                            apiKeyValid = false;
-                        }
-                        else
-                        {
-                            apiKeyValid = true;
-                        }
-
-                    });
-            } catch
-            {
-                apiKeyValidationLoading = false;
-                apiKeyValid = false;
-                Repaint();
+                        textColor = requestPercentageUsage >= 1 ? Color.red : (requestPercentageUsage >= 0.8 ? Color.yellow : Color.green)
+                    }
+                });
             }
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Audio clips generated in the last 365 days:", GUILayout.Width(250));
+
+            if (!UserVerification.quotaLoading)
+            {
+                EditorGUILayout.LabelField((UserVerification.quota?.GenerationCount ?? 0) + "/" + (UserVerification.quota?.GenerationQuota ?? 0), new GUIStyle(EditorStyles.label)
+                {
+                    normal = new GUIStyleState()
+                    {
+                        textColor = generationPercentageUsage >= 1 ? Color.red : (generationPercentageUsage >= 0.8 ? Color.yellow : Color.green)
+                    }
+                });
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
         }
     }
 }
