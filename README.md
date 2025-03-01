@@ -2,6 +2,10 @@
 
 **Runtime Sounds** is a Unity audio plugin that allows developers to browse, download, and use various sounds dynamically at runtime in their games. Whether you need background music, sound effects, or ambient audio, RuntimeSounds provides an easy-to-use plugin for seamless integration.
 
+## Docs
+
+For a detailed setup guide and documentation you can visit [our public docs](https://runtimesounds.gitbook.io/docs)
+
 ## Features
 
 ✅ Browse and search different libraries of sounds
