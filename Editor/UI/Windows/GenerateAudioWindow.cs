@@ -48,7 +48,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
                 EnsureResourcePathExists();
 
-                AssetDatabase.CreateAsset(settings, "Assets/RuntimeSounds/Resources/RuntimeSoundsSettings.asset");
+                AssetDatabase.CreateAsset(settings, "Assets/Runtime Sounds/Resources/RuntimeSoundsSettings.asset");
                 EditorUtility.SetDirty(settings);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -211,7 +211,13 @@ namespace RuntimeSounds.Editor.UI.Windows
                         try
                         {
                             RuntimeSoundsSdk
-                                .GenerateAssetAsync(prompt, assetName, duration)
+                                .GenerateAssetAsync(prompt, assetName, duration, new RequestCallbacks()
+                                {
+                                    OnError = (error) =>
+                                    {
+                                        UserVerification.GetQuota(settings.ApiKey);
+                                    }
+                                })
                                 .ContinueWith(generationResponse =>
                                 {
                                     generationLoading = false;
@@ -296,11 +302,11 @@ namespace RuntimeSounds.Editor.UI.Windows
 
         private void EnsureResourcePathExists()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/RuntimeSounds"))
-                AssetDatabase.CreateFolder("Assets", "RuntimeSounds");
+            if (!AssetDatabase.IsValidFolder("Assets/Runtime Sounds"))
+                AssetDatabase.CreateFolder("Assets", "Runtime Sounds");
 
-            if (!AssetDatabase.IsValidFolder("Assets/RuntimeSounds/Resources"))
-                AssetDatabase.CreateFolder("Assets/RuntimeSounds", "Resources");
+            if (!AssetDatabase.IsValidFolder("Assets/Runtime Sounds/Resources"))
+                AssetDatabase.CreateFolder("Assets/Runtime Sounds", "Resources");
         }
 
         private void RenderAudioClip(Asset asset, EditorAudioClip clipData)

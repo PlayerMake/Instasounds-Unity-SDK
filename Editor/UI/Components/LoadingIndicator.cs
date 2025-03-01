@@ -8,7 +8,7 @@ namespace RuntimeSounds.Editor.UI.Components
         private int currentFrame = 0;
         private int maxFrame = 3;
 
-        private float updateInterval = 0.2f;
+        private float updateInterval = 0.05f;
         private float lastUpdateTime = 0f;
 
         public LoadingIndicator()
