@@ -58,5 +58,20 @@ namespace RuntimeSounds.Api
                 }
             });
         }
+
+        public virtual async Task<AssetLoadNotificationResponse> NotifyOfLoadAsync(AssetLoadNotificationRequest request, RequestCallbacks callbacks = null)
+        {
+            return await PostAsync<AssetLoadNotificationResponse, AssetLoadNotificationBody>(new RequestWithBody<AssetLoadNotificationBody>()
+            {
+                Url = $"{_settings.ApiBaseUrl}/v1/{Resource}/notify",
+                Payload = request.Body,
+                Callbacks = callbacks,
+                Headers = new Dictionary<string, string>()
+                {
+                    { "x-api-key", _settings.ApiKey },
+                    { "Content-Type", "application/json" }
+                }
+            });
+        }
     }
 }

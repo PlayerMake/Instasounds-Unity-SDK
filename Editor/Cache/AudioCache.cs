@@ -1,3 +1,4 @@
+using RuntimeSounds.V1;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -55,6 +56,8 @@ public static class AudioCache
     public static AudioClip Load(string id)
     {
         Init();
+
+        RuntimeSoundsSdk.NotifyOfLoad(id, true);
 
         return AssetDatabase.LoadAssetAtPath<AudioClip>($"{cache.CacheDirectory}/{id}.wav");
     }

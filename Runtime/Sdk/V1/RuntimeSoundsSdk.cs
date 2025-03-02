@@ -24,6 +24,21 @@ namespace RuntimeSounds.V1
                 _userApi = new UserApi(_developerSettings);
         }
 
+
+        public static void NotifyOfLoad(string assetId, bool cached)
+        {
+            Init();
+
+            _ = _assetApi.NotifyOfLoadAsync(new AssetLoadNotificationRequest()
+            {
+                Body = new AssetLoadNotificationBody()
+                {
+                    Id = assetId,
+                    Cached = cached,
+                }
+            });
+        }
+
         public static async Task<User> VerifyApiKeyAsync(string apiKey, RequestCallbacks callbacks = null)
         {
             Init();
@@ -55,6 +70,8 @@ namespace RuntimeSounds.V1
             RequestCallbacks callbacks = null
             )
         {
+            Init();
+
             var generationResponse = await _assetApi.GenerateAssetAsync(new AssetGenerationRequest()
             {
                 Body = new AssetGenerationBody()
@@ -74,6 +91,8 @@ namespace RuntimeSounds.V1
             RequestCallbacks callbacks = null
             )
         {
+            Init();
+
             var importResponse = await _assetApi.ImportAssetAsync(new AssetImportRequest()
             {
                 Body = new AssetImportBody()

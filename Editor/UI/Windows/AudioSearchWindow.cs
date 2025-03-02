@@ -131,20 +131,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
         void OnEnable()
         {
-            settings = Resources.Load<RuntimeSoundsSettings>("RuntimeSoundsSettings");
-
-            if (settings == null)
-            {
-                settings = CreateInstance<RuntimeSoundsSettings>();
-
-                EnsureResourcePathExists();
-
-                AssetDatabase.CreateAsset(settings, "Assets/Runtime Sounds/Resources/RuntimeSoundsSettings.asset");
-                EditorUtility.SetDirty(settings);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-            }
-
+            settings = SettingsHelper.GetOrCreateAndGetSettings();
             debouncer = new Debouncer(0.5f);
 
             if (!previewGameObject)
@@ -222,15 +209,6 @@ namespace RuntimeSounds.Editor.UI.Windows
             {
                 tierLoading = false;
             }
-        }
-
-        private void EnsureResourcePathExists()
-        {
-            if (!AssetDatabase.IsValidFolder("Assets/Runtime Sounds"))
-                AssetDatabase.CreateFolder("Assets", "Runtime Sounds");
-
-            if (!AssetDatabase.IsValidFolder("Assets/Runtime Sounds/Resources"))
-                AssetDatabase.CreateFolder("Assets/Runtime Sounds", "Resources");
         }
 
         private static void LoadItems(int page)

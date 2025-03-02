@@ -220,7 +220,7 @@ public static class EditorAudio
 
             var stopTime = EditorApplication.timeSinceStartup + clip.length;
 
-            asset.clipendCallback = () => EditorAudio.CleanupOnClipFinish(stopTime, asset);
+            asset.clipendCallback = () => CleanupOnClipFinish(stopTime, asset);
 
             EditorApplication.update += asset.clipendCallback;
             EditorApplication.update -= updateCallback;
