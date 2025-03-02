@@ -5,8 +5,6 @@ public static class AudioCacheReader
 {
     public static AudioClip Load(string id)
     {
-        RuntimeSoundsSdk.NotifyOfLoad(id, true);
-
         return Resources.Load<AudioClip>($"audio/{id}");
     }
 }

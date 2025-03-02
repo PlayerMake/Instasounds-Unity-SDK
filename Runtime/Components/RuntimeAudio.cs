@@ -23,6 +23,8 @@ public class RuntimeAudio : MonoBehaviour
 
         if (audioClip != null)
         {
+            RuntimeSoundsSdk.NotifyOfLoad(assetId, true);
+
             audioSource.clip = audioClip;
 
             if (playOnLoad)
