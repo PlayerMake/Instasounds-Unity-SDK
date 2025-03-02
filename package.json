@@ -1,7 +1,7 @@
 {
   "name": "com.runtimesounds.sdk",
   "version": "1.0.0",
-  "displayName": "Runtime Sounds SDK",
+  "displayName": "Runtime Sounds",
   "description": "The official Runtime Sounds SDK. Easy to setup, and built to power real time audio in games.",
   "unity": "2021.3",
   "author": {
