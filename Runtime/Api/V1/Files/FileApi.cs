@@ -39,7 +39,7 @@ namespace RuntimeSounds.Api
                 }
                 else
                 {
-                    Debug.LogWarning("Error downloading audio. Please ensure your API Key is set in Tools -> Runtime Sounds -> Account");
+                    Debug.LogWarning("Error downloading audio. Check your internet connection, and please ensure your API Key is set in Tools -> Runtime Sounds -> Account");
                 }
                 return null;
             }
@@ -67,7 +67,10 @@ namespace RuntimeSounds.Api
                 await Task.Yield();
             }
 
-            if (request.result != UnityWebRequest.Result.Success)
+            if (request.result == UnityWebRequest.Result.ConnectionError)
+            {
+                Debug.LogWarning("Problem connecting to server. Check your internet connection.");
+            } else if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError("Failed to download: " + request.error);
             }
