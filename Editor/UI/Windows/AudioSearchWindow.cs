@@ -125,6 +125,7 @@ namespace RuntimeSounds.Editor.UI.Windows
         {
             _component = null;
             _editorComponent = null;
+            forceClose = false;
             var window = GetWindow<AudioSearchWindow>("Browse Audio");
             window.minSize = new Vector2(490, 500);
         }
@@ -258,6 +259,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
         public static void Open(string defaultSource) 
         {
+            forceClose = false;
             var window = GetWindow<AudioSearchWindow>("Audio Search");
             window.minSize = new Vector2(490, 500);
 
@@ -271,6 +273,7 @@ namespace RuntimeSounds.Editor.UI.Windows
 
         public static void Open(RuntimeAudioEditor editorComponent, RuntimeAudio component)
         {
+            forceClose = false;
             var window = GetWindow<AudioSearchWindow>("Audio Picker");
             window.minSize = new Vector2(490, 500);
 
